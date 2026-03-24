@@ -1,0 +1,101 @@
+@model List<GDG_DashBoard.BLL.Dtos.Admin.MemberOverviewDto>
+
+<table class="w-full text-left">
+    <thead class="bg-surface-container-low text-[10px] uppercase tracking-widest text-on-surface/60 font-bold border-b border-outline-variant">
+        <tr>
+            <th class="px-6 py-4">Member</th>
+            <th class="px-6 py-4">Role</th>
+            <th class="px-6 py-4">Season</th>
+            <th class="px-6 py-4">Status</th>
+            <th class="px-6 py-4 text-right">Actions</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-outline-variant">
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="5" class="px-6 py-16 text-center text-on-surface/40 text-sm">
+                    <span class="material-symbols-outlined text-4xl mb-3 block">search_off</span>
+                    No members found matching your criteria.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var member in Model)
+            {
+                <tr class="hover:bg-surface-container/20 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0 border border-primary/20">
+                                @member.FullName.Substring(0, 1).ToUpper()
+                            </div>
+                            <div>
+                                <p class="font-bold text-sm text-on-surface">@member.FullName</p>
+                                <p class="text-[11px] font-medium text-on-surface/50">@member.Email</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        @{
+                            var roleColor = member.Role switch
+                            {
+                                "Admin" => "bg-gdg-red/10 text-gdg-red border-gdg-red/20",
+                                "Mentor" => "bg-gdg-green/10 text-gdg-green border-gdg-green/20",
+                                "Organizer" => "bg-gdg-blue/10 text-gdg-blue border-gdg-blue/20",
+                                "Speaker" => "bg-gdg-yellow/10 text-gdg-yellow border-gdg-yellow/20",
+                                _ => "bg-surface-container-highest text-on-surface/60 border-outline-variant/50"
+                            };
+                            var displayRole = string.IsNullOrEmpty(member.Role) ? "Member" : member.Role;
+                        }
+                        <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border @roleColor">
+                            @displayRole
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-medium text-on-surface/70">@(member.Season ?? "—")</td>
+                    <td class="px-6 py-4">
+                        @if(member.IsVerified)
+                        {
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-tighter">
+                                <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Active
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-tertiary/10 text-tertiary text-[10px] font-bold uppercase tracking-tighter">
+                                <span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span> Pending
+                            </span>
+                        }
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-3">
+                            <!-- Resend Setup Link -->
+                            @if (!member.IsVerified)
+                            {
+                                <form asp-action="ResendActivationToken" asp-route-id="@member.UserId" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" title="Resend Setup Link" 
+                                            class="text-on-surface/40 hover:text-tertiary hover:bg-tertiary/10 p-1.5 rounded-md transition-all active:scale-95 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-[18px]">forward_to_inbox</span>
+                                    </button>
+                                </form>
+                            }
+                            
+                            <!-- Manage Roles -->
+                            <a asp-controller="Role" asp-action="ManageRoles" asp-route-id="@member.UserId" asp-route-returnUrl="@Context.Request.Path" title="Manage Roles"
+                               class="text-on-surface/40 hover:text-gdg-blue hover:bg-gdg-blue/10 p-1.5 rounded-md transition-all active:scale-95 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+                            </a>
+
+                            <!-- View Profile -->
+                            <a asp-controller="Admin" asp-action="Member" asp-route-id="@member.UserId" title="View Profile"
+                               class="text-on-surface/40 hover:text-primary hover:bg-primary/10 p-1.5 rounded-md transition-all active:scale-95 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

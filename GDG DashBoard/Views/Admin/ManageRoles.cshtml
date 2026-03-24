@@ -1,0 +1,99 @@
+@model GDG_DashBoard.BLL.ViewModels.Admin.ManageUserRolesViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Manage Roles";
+    ViewData["PageTitle"] = "Manage Roles";
+}
+
+<div class="max-w-2xl mx-auto space-y-8">
+
+    <!-- Page Header -->
+    <div>
+        <nav class="flex text-[11px] font-bold tracking-wider text-primary uppercase mb-1">
+            <ol class="flex items-center space-x-2">
+                <li><a asp-controller="Admin" asp-action="Index" class="hover:underline">Management</a></li>
+                <li class="flex items-center space-x-2">
+                    <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                    <span>Manage Roles</span>
+                </li>
+            </ol>
+        </nav>
+        <h2 class="text-3xl font-bold font-headline tracking-tight text-on-surface">Role Assignment</h2>
+        <p class="text-on-surface/50 text-sm mt-1">
+            Manage roles for <strong>@Model.UserName</strong>
+        </p>
+    </div>
+
+    <!-- Success / Error Messages -->
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="bg-secondary/5 border border-secondary/30 rounded-xl p-4 flex items-center gap-3">
+            <span class="material-symbols-outlined text-secondary" style="font-variation-settings:'FILL' 1;">check_circle</span>
+            <p class="text-sm font-medium text-secondary">@success</p>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string error)
+    {
+        <div class="bg-error/5 border border-error/30 rounded-xl p-4 flex items-center gap-3">
+            <span class="material-symbols-outlined text-error">error</span>
+            <p class="text-sm font-medium text-error">@error</p>
+        </div>
+    }
+
+    <!-- Roles Form -->
+    <div class="bg-white rounded-2xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="px-8 py-6 border-b border-outline-variant bg-surface-container/30 flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+            <h3 class="font-bold font-headline text-lg">Assigned Roles</h3>
+        </div>
+
+        <form asp-controller="Role" asp-action="ManageRoles" asp-route-id="@Model.UserId" method="post" class="p-8">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+            <div class="space-y-4">
+                @for (int i = 0; i < Model.Roles.Count; i++)
+                {
+                    <input type="hidden" asp-for="Roles[i].RoleName" />
+                    
+                    <label class="flex items-center gap-4 p-4 bg-surface-container-low border border-outline-variant rounded-xl cursor-pointer group hover:bg-surface-container hover:border-primary/30 transition-all">
+                        <input type="checkbox"
+                               asp-for="Roles[i].IsSelected"
+                               class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/30" />
+                               
+                        <div class="flex-1">
+                            <span class="font-semibold text-on-surface group-hover:text-primary transition-colors">@Model.Roles[i].RoleName</span>
+                        </div>
+                        
+                        @{
+                            var roleColor = Model.Roles[i].RoleName switch
+                            {
+                                "Admin" => "bg-gdg-red/10 text-gdg-red",
+                                "Mentor" => "bg-gdg-green/10 text-gdg-green",
+                                "Organizer" => "bg-gdg-blue/10 text-gdg-blue",
+                                "Speaker" => "bg-gdg-yellow/10 text-gdg-yellow",
+                                _ => "bg-surface-container-highest text-on-surface/60"
+                            };
+                        }
+                        <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full @roleColor">
+                            @Model.Roles[i].RoleName
+                        </span>
+                    </label>
+                }
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center gap-4 pt-8 mt-8 border-t border-outline-variant">
+                <button type="submit"
+                        class="bg-primary px-8 py-3 rounded-lg font-bold text-sm text-white gdg-shadow hover:bg-[#1a73e8] hover:shadow-lg active:scale-[0.98] transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">save</span>
+                    Save Changes
+                </button>
+                <a href="@(ViewBag.ReturnUrl ?? Url.Action("Index", "Admin"))"
+                   class="px-5 py-3 text-on-surface/60 text-sm font-medium hover:text-on-surface transition-colors">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

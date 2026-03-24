@@ -1,0 +1,232 @@
+@model GDG_DashBoard.ViewModels.Admin.MemberDetailViewModel
+@{
+    Layout = "_AdminLayout";
+    var member = Model.Member;
+    var roadmap = Model.ActiveRoadmap;
+    ViewData["Title"] = "Roadmap – " + member.FullName;
+    ViewData["PageTitle"] = "Learning Roadmap";
+}
+
+<div class="max-w-5xl mx-auto">
+
+    <!-- Back Nav -->
+    <nav class="flex text-[11px] font-bold tracking-wider text-primary uppercase mb-8">
+        <ol class="flex items-center space-x-2">
+            <li><a asp-controller="Admin" asp-action="Index" class="hover:underline">Dashboard</a></li>
+            <li class="flex items-center space-x-2">
+                <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                <a asp-controller="Admin" asp-action="Member" asp-route-id="@member.UserId" class="hover:underline">@member.FullName</a>
+            </li>
+            <li class="flex items-center space-x-2">
+                <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                <span>Roadmap</span>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+        <!-- ══ CENTER COLUMN: Roadmap Journey ═══════════════════════════════ -->
+        <div class="lg:col-span-8 space-y-12">
+
+            @if (roadmap is null)
+            {
+                <!-- No enrollment state -->
+                <div class="text-center py-24 text-on-surface/30">
+                    <span class="material-symbols-outlined text-6xl mb-4 block">map</span>
+                    <p class="font-bold font-headline text-xl mb-2">No Active Roadmap</p>
+                    <p class="text-sm">@member.FullName hasn't enrolled in any roadmaps yet.</p>
+                </div>
+            }
+            else
+            {
+                <!-- Roadmap Header -->
+                <section class="space-y-6">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-primary mb-2 block">
+                            Current Track • @roadmap.DifficultyLevel
+                        </span>
+                        <h3 class="text-4xl font-extrabold font-headline tracking-tight text-on-surface">@roadmap.RoadmapTitle</h3>
+                    </div>
+
+                    <!-- Overall Progress Bar -->
+                    <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                        <div class="flex justify-between items-end mb-4">
+                            <span class="text-sm font-semibold text-on-surface/60">Overall Progress</span>
+                            <span class="text-2xl font-black text-primary">@roadmap.ProgressPercentage%</span>
+                        </div>
+                        <div class="h-3 w-full bg-surface-container rounded-full overflow-hidden">
+                            <div class="h-full bg-primary rounded-full transition-all duration-1000" style="width: @roadmap.ProgressPercentage%"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Learning Path (Vertical Flow) -->
+                <section class="relative">
+                    <!-- Track line -->
+                    <div class="absolute left-[27px] top-4 bottom-4 w-1 bg-surface-container-highest rounded-full">
+                        @{
+                            var completedCount = roadmap.Levels.Count(l => l.IsCompleted);
+                            var trackFillPct = roadmap.Levels.Any()
+                                ? (int)Math.Round((double)completedCount / roadmap.Levels.Count * 100)
+                                : 0;
+                        }
+                        <div class="absolute top-0 w-full bg-primary rounded-full" style="height: @trackFillPct%"></div>
+                    </div>
+
+                    <div class="space-y-10">
+                        @foreach (var level in roadmap.Levels)
+                        {
+                            @if (level.IsCompleted)
+                            {
+                                <!-- Completed Step -->
+                                <div class="relative pl-20 group">
+                                    <div class="absolute left-0 top-1 w-14 h-14 bg-gdg-green rounded-full flex items-center justify-center z-10 shadow-lg text-white">
+                                        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                                    </div>
+                                    <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border-l-4 border-gdg-green hover:-translate-y-1 transition-transform">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="px-3 py-1 bg-secondary/10 text-secondary text-[10px] font-bold uppercase tracking-wider rounded-full">Step @level.OrderIndex</span>
+                                            <span class="text-xs font-medium text-secondary">Completed</span>
+                                        </div>
+                                        <h4 class="text-lg font-bold font-headline">@level.Title</h4>
+                                        @if (!string.IsNullOrEmpty(level.Instructions))
+                                        {
+                                            <p class="text-on-surface/60 text-sm mt-2 leading-relaxed">@level.Instructions</p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            else if (!level.IsCompleted && (level.OrderIndex == completedCount + 1 || !roadmap.Levels.Any(l => l.IsCompleted)))
+                            {
+                                <!-- In Progress Step (next uncompleted) -->
+                                <div class="relative pl-20 group">
+                                    <div class="absolute left-0 top-1 w-14 h-14 bg-primary rounded-full flex items-center justify-center z-10 shadow-lg text-white step-pulse">
+                                        <span class="material-symbols-outlined">pending</span>
+                                    </div>
+                                    <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-md border-l-4 border-primary hover:-translate-y-1 transition-transform">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider rounded-full">Step @level.OrderIndex</span>
+                                            <span class="text-xs font-medium text-primary font-bold">In Progress</span>
+                                        </div>
+                                        <h4 class="text-lg font-bold font-headline">@level.Title</h4>
+                                        @if (!string.IsNullOrEmpty(level.Instructions))
+                                        {
+                                            <p class="text-on-surface/60 text-sm mt-2 leading-relaxed mb-4">@level.Instructions</p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- Locked Step -->
+                                <div class="relative pl-20 group opacity-50">
+                                    <div class="absolute left-0 top-1 w-14 h-14 bg-surface-container-highest rounded-full flex items-center justify-center z-10 shadow-sm text-on-surface/40">
+                                        <span class="material-symbols-outlined">lock</span>
+                                    </div>
+                                    <div class="bg-surface-container-low p-6 rounded-2xl border-l-4 border-surface-container-highest">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="px-3 py-1 bg-surface-container-highest text-on-surface/50 text-[10px] font-bold uppercase tracking-wider rounded-full">Step @level.OrderIndex</span>
+                                            <span class="text-xs font-medium text-on-surface/40">Locked</span>
+                                        </div>
+                                        <h4 class="text-lg font-bold font-headline">@level.Title</h4>
+                                        @if (!string.IsNullOrEmpty(level.Instructions))
+                                        {
+                                            <p class="text-on-surface/50 text-sm mt-2 leading-relaxed">
+                                                Complete the previous step to unlock this module.
+                                            </p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </section>
+            }
+
+            <!-- Other enrolled roadmaps -->
+            @if (member.EnrolledRoadmaps.Count > 1)
+            {
+                <section class="space-y-4 pt-4 border-t border-outline-variant/20">
+                    <h4 class="text-sm font-bold text-on-surface/50 uppercase tracking-widest">Other Enrollments</h4>
+                    @foreach (var otherRoadmap in member.EnrolledRoadmaps.Where(r => r.RoadmapId != roadmap?.RoadmapId))
+                    {
+                        <div class="flex items-center justify-between bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
+                            <div>
+                                <p class="font-semibold text-sm">@otherRoadmap.RoadmapTitle</p>
+                                <p class="text-xs text-on-surface/50 mt-0.5">@otherRoadmap.DifficultyLevel • @otherRoadmap.Status</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-primary h-full" style="width: @otherRoadmap.ProgressPercentage%"></div>
+                                </div>
+                                <span class="text-xs font-bold text-on-surface/60 w-10 text-right">@otherRoadmap.ProgressPercentage%</span>
+                            </div>
+                        </div>
+                    }
+                </section>
+            }
+        </div>
+
+        <!-- ══ RIGHT SIDEBAR ═══════════════════════════════════════════════ -->
+        <aside class="lg:col-span-4 space-y-6">
+
+            <!-- Quick Stats -->
+            <div class="bg-surface-container-low p-8 rounded-2xl space-y-6 border border-outline-variant/10">
+                <div class="flex items-center justify-between">
+                    <h5 class="text-sm font-bold text-on-surface/40 uppercase tracking-widest">Progress Stats</h5>
+                    <span class="material-symbols-outlined text-primary">trending_up</span>
+                </div>
+                @if (roadmap is not null)
+                {
+                    var completed = roadmap.Levels.Count(l => l.IsCompleted);
+                    var total = roadmap.Levels.Count;
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-outline-variant/5">
+                            <p class="text-[10px] font-bold uppercase text-on-surface/50 mb-1">Completed</p>
+                            <p class="text-3xl font-black font-headline text-gdg-green">@completed</p>
+                            <p class="text-[10px] text-secondary font-bold mt-1">steps done</p>
+                        </div>
+                        <div class="bg-surface-container-lowest p-4 rounded-xl shadow-sm border border-outline-variant/5">
+                            <p class="text-[10px] font-bold uppercase text-on-surface/50 mb-1">Total</p>
+                            <p class="text-3xl font-black font-headline text-on-surface">@total</p>
+                            <p class="text-[10px] text-on-surface/40 font-bold mt-1">@(total - completed) remaining</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Member Quick Card -->
+            <div class="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/10 shadow-sm">
+                <h5 class="text-sm font-bold text-primary mb-4 flex items-center">
+                    <span class="material-symbols-outlined mr-2 text-sm">person</span>
+                    Member Info
+                </h5>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-on-surface/50">Role</span>
+                        <span class="font-semibold text-on-surface">@(member.Role ?? "—")</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-on-surface/50">Season</span>
+                        <span class="font-semibold text-on-surface">@(member.Season ?? "—")</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-on-surface/50">Status</span>
+                        <span class="font-semibold @(member.IsActive ? "text-secondary" : "text-error")">
+                            @(member.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-on-surface/50">Enrolled</span>
+                        <span class="font-semibold text-on-surface">@member.EnrolledRoadmaps.Count roadmaps</span>
+                    </div>
+                </div>
+                <a asp-controller="Admin" asp-action="Member" asp-route-id="@member.UserId"
+                   class="mt-5 block text-center text-xs font-bold text-primary hover:underline">
+                    View Full Profile →
+                </a>
+            </div>
+        </aside>
+    </div>
+</div>

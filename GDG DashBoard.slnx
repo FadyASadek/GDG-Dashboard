@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="GDG DashBoard.BLL/GDG DashBoard.BLL.csproj" />
+  <Project Path="GDG DashBoard.DAL/GDG DashBoard.DAL.csproj" />
+  <Project Path="GDG DashBoard/GDG DashBoard.csproj" />
+</Solution>

@@ -1,0 +1,24 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Access Denied";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Access Denied – GDG Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="min-h-screen bg-[#fcf9f8] flex items-center justify-center p-8">
+    <div class="text-center max-w-md">
+        <div class="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-red-500 text-4xl">🚫</div>
+        <h1 class="text-3xl font-extrabold text-[#1b1b1c] mb-2" style="font-family:'Manrope',sans-serif;">Access Denied</h1>
+        <p class="text-[#1b1b1c]/60 mb-8 leading-relaxed">You don't have permission to view this page. This area is restricted to administrators.</p>
+        <a href="/Auth/Login" class="inline-flex items-center gap-2 px-6 py-3 bg-[#4285f4] text-white rounded-xl font-semibold text-sm hover:bg-[#1a73e8] transition-colors">
+            ← Back to Login
+        </a>
+    </div>
+</body>
+</html>

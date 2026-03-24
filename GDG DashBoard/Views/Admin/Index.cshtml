@@ -1,0 +1,176 @@
+@model GDG_DashBoard.ViewModels.Admin.DashboardViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Admin Dashboard";
+    ViewData["PageTitle"] = "Instructor Console";
+}
+
+<div class="max-w-7xl mx-auto space-y-8">
+
+    <!-- ══ PAGE HEADER ════════════════════════════════════════════════════════ -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <nav aria-label="Breadcrumb" class="flex text-[11px] font-bold tracking-wider text-primary uppercase mb-1">
+                <ol class="flex items-center space-x-2">
+                    <li>Management</li>
+                    <li class="flex items-center space-x-2">
+                        <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                        <span>Overview</span>
+                    </li>
+                </ol>
+            </nav>
+            <h2 class="text-3xl font-bold font-headline tracking-tight text-on-surface">Community Growth</h2>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-controller="Admin" asp-action="Onboard"
+               class="bg-primary px-5 py-2.5 rounded-lg font-medium text-sm text-white gdg-shadow hover:bg-[#1a73e8] transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">person_add</span>
+                Onboard Member
+            </a>
+        </div>
+    </div>
+
+    <!-- ══ BENTO GRID ═════════════════════════════════════════════════════════ -->
+    <div class="space-y-6">
+
+        <!-- Stats Column (Full Width) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- Total Members -->
+            <div class="bg-white p-6 rounded-xl border border-outline-variant hover:shadow-md transition-shadow">
+                <p class="text-xs font-medium text-on-surface/60 mb-2">Total Members</p>
+                <div class="flex items-end justify-between">
+                    <h3 class="text-3xl font-bold font-headline">@Model.TotalMembers</h3>
+                    <div class="flex items-center text-xs text-secondary font-bold">
+                        <span class="material-symbols-outlined text-xs mr-0.5">trending_up</span>
+                        Active
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active This Week -->
+            <div class="bg-white p-6 rounded-xl border border-outline-variant hover:shadow-md transition-shadow">
+                <p class="text-xs font-medium text-on-surface/60 mb-2">Active This Week</p>
+                <h3 class="text-3xl font-bold font-headline">@Model.ActiveThisWeek</h3>
+                <div class="mt-4 w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-primary h-full transition-all duration-1000" style="width: @(Model.ActivePercentage)%"></div>
+                </div>
+            </div>
+
+            <!-- Roadmaps -->
+            <div class="bg-white p-6 rounded-xl border border-outline-variant hover:shadow-md transition-shadow">
+                <p class="text-xs font-medium text-on-surface/60 mb-2">Roadmaps</p>
+                <h3 class="text-3xl font-bold font-headline text-tertiary">@Model.TotalRoadmaps</h3>
+                @if (Model.PendingReviewRoadmaps > 0)
+                {
+                    <p class="mt-2 text-[10px] text-on-surface/40 uppercase tracking-widest font-bold">
+                        @Model.PendingReviewRoadmaps pending review
+                    </p>
+                }
+            </div>
+
+            <!-- Member Progress Table (full span) -->
+            <div class="col-span-1 sm:col-span-3 bg-white rounded-xl border border-outline-variant overflow-hidden">
+                <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container/30">
+                    <h4 class="font-bold font-headline text-base">Member Progress</h4>
+                    <span class="text-on-surface/40 text-xs font-medium">@Model.Members.Count total</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-surface-container-low text-[10px] uppercase tracking-widest text-on-surface/60 font-bold">
+                            <tr>
+                                <th class="px-6 py-3">Member</th>
+                                <th class="px-6 py-3">Season</th>
+                                <th class="px-6 py-3">Roadmaps</th>
+                                <th class="px-6 py-3">Progress</th>
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant">
+                            @if (!Model.Members.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-on-surface/40 text-sm">
+                                        No members yet. <a asp-controller="Admin" asp-action="Onboard" class="text-primary font-semibold hover:underline">Onboard the first one →</a>
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var member in Model.Members)
+                                {
+                                    <tr class="hover:bg-surface-container/20 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                                                    @member.FullName.Substring(0, 1).ToUpper()
+                                                </div>
+                                                <div>
+                                                    <p class="font-medium text-sm">@member.FullName</p>
+                                                    <p class="text-[10px] text-on-surface/40">@member.Email</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-on-surface/60">@(member.Season ?? "—")</td>
+                                        <td class="px-6 py-4 text-sm">@member.EnrolledRoadmapsCount</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3 min-w-[120px]">
+                                                <div class="flex-1 bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+                                                    <div class="bg-primary h-full" style="width: @(member.OverallProgressPercentage)%"></div>
+                                                </div>
+                                                <span class="text-xs font-bold text-on-surface/70">@member.OverallProgressPercentage%</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            @{
+                                                var statusClasses = member.EnrollmentStatus switch
+                                                {
+                                                    "InProgress" => "bg-secondary/10 text-secondary",
+                                                    "Completed" => "bg-primary/10 text-primary",
+                                                    "Pending" => "bg-tertiary/10 text-tertiary",
+                                                    _ => "bg-surface-container-high text-on-surface/50"
+                                                };
+                                                var statusLabel = member.EnrollmentStatus switch
+                                                {
+                                                    "InProgress" => "Active",
+                                                    "Completed" => "Done",
+                                                    "Pending" => "Pending",
+                                                    _ => member.EnrollmentStatus
+                                                };
+                                            }
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-tighter @statusClasses">
+                                                @statusLabel
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-4">
+                                                <a asp-controller="Role" asp-action="ManageRoles" asp-route-id="@member.UserId"
+                                                   class="text-[10px] uppercase tracking-wider font-bold text-gdg-blue bg-gdg-blue/5 border border-gdg-blue/20 hover:bg-gdg-blue/10 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 shadow-sm">
+                                                    <span class="material-symbols-outlined text-[14px]">admin_panel_settings</span>
+                                                    Manage Roles
+                                                </a>
+                                                <a asp-controller="Admin" asp-action="Member" asp-route-id="@member.UserId"
+                                                   class="text-primary text-xs font-semibold hover:underline flex items-center gap-1 p-1">
+                                                    View
+                                                    <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Show All Link -->
+                <div class="px-6 py-4 border-t border-outline-variant bg-surface-container/10 flex justify-center">
+                    <a asp-controller="Admin" asp-action="AllMembers" class="text-xs font-bold text-primary hover:text-[#1a73e8] hover:underline flex items-center gap-1 transition-colors">
+                        Show All Members
+                        <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

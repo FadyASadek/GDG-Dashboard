@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>GDG_DashBoard.BLL</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- Grants access to ASP.NET Core APIs (SignInManager, UserManager, etc.) in a class library -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GDG DashBoard.DAL\GDG DashBoard.DAL.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.9.0" />
+    <PackageReference Include="MimeKit" Version="4.9.0" />
+  </ItemGroup>
+
+</Project>

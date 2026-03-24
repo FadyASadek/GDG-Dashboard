@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Home Page";
+    Layout = "_AdminLayout";
+    ViewData["PageTitle"] = "Home";
+}
+
+<div class="max-w-4xl mx-auto space-y-8 mt-8">
+    <div class="bg-white rounded-2xl border border-outline-variant shadow-sm p-12 text-center">
+        <img src="~/image/gdg_bandung_logo_only.png.png" asp-append-version="true" alt="GDG Logo" class="w-24 h-auto mx-auto mb-6" onerror="this.onerror=null; this.src='https://via.placeholder.com/96x96?text=G';" />
+        
+        <h1 class="text-4xl font-bold font-headline text-on-surface mb-3">Welcome to GDG Dashboard</h1>
+        <p class="text-on-surface/60 max-w-xl mx-auto text-lg">
+            A unified learning, management, and progress-tracking platform for Google Developer Groups.
+        </p>
+
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <a asp-controller="Member" asp-action="Index" class="group flex items-center p-4 bg-surface-container-low border border-outline-variant hover:border-primary/30 rounded-xl transition-all">
+                <div class="w-12 h-12 rounded-lg bg-gdg-blue/10 flex items-center justify-center mr-4 group-hover:bg-gdg-blue/20 transition-colors">
+                    <span class="material-symbols-outlined text-gdg-blue">person</span>
+                </div>
+                <div class="text-left hidden md:block">
+                    <h3 class="font-bold text-sm text-on-surface">My Profile</h3>
+                    <p class="text-xs text-on-surface/50">Manage your CV and skills</p>
+                </div>
+            </a>
+
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Admin" asp-action="Index" class="group flex items-center p-4 bg-surface-container-low border border-outline-variant hover:border-gdg-red/30 rounded-xl transition-all">
+                    <div class="w-12 h-12 rounded-lg bg-gdg-red/10 flex items-center justify-center mr-4 group-hover:bg-gdg-red/20 transition-colors">
+                        <span class="material-symbols-outlined text-gdg-red">dashboard</span>
+                    </div>
+                    <div class="text-left hidden md:block">
+                        <h3 class="font-bold text-sm text-on-surface">Admin Dashboard</h3>
+                        <p class="text-xs text-on-surface/50">Platform management</p>
+                    </div>
+                </a>
+            }
+        </div>
+    </div>
+</div>
