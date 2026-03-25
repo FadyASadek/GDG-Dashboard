@@ -1,0 +1,186 @@
+@model IEnumerable<GDG_DashBoard.DAL.Models.CommunityGroup>
+@{
+    ViewData["Title"] = "Instructor Console";
+    Layout = "_AdminLayout";
+    ViewData["PageTitle"] = "Instructor Console";
+    var totalMembers = Model.SelectMany(g => g.GroupMembers).Select(gm => gm.MemberId).Distinct().Count();
+}
+
+@section Scripts {
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            corePlugins: {
+                preflight: false 
+            },
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#4285f4",
+                        "secondary": "#34a853",
+                        "tertiary": "#f9ab00",
+                        "error": "#ea4335",
+                        "on-primary": "#ffffff",
+                        "surface": "#ffffff",
+                        "background": "#f8f9fa",
+                        "on-surface": "#202124",
+                        "outline-variant": "#dadce0",
+                        "surface-container-low": "#ffffff",
+                        "surface-container": "#f1f3f4",
+                        "surface-container-high": "#e8eaed",
+                        "surface-container-highest": "#dee1e5",
+                    },
+                    fontFamily: {
+                        "headline": ["Google Sans", "Manrope", "sans-serif"],
+                        "body": ["Roboto", "Inter", "sans-serif"],
+                        "label": ["Roboto", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: '@TempData["SuccessMessage"]'
+                });
+            });
+        </script>
+    }
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&amp;family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .gdg-shadow {
+        box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+    }
+    .font-headline { font-family: 'Google Sans', sans-serif; }
+    .font-body { font-family: 'Roboto', sans-serif; }
+</style>
+
+<div class="tw-wrapper font-body bg-background text-on-surface p-4 md:p-8 rounded-xl">
+    <!-- ══ PAGE HEADER ════════════════════════════════════════════════════════ -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+       <nav aria-label="Breadcrumb" class="flex text-[11px] font-bold tracking-wider text-primary uppercase mb-1">
+                <ol class="flex items-center space-x-2">
+                    <li>Management</li>
+                    <li class="flex items-center space-x-2">
+                        <span class="material-symbols-outlined text-[12px]">chevron_right</span>
+                        <span>Overview</span>
+                    </li>
+                </ol>
+            </nav>
+            <h2 class="text-3xl font-bold font-headline tracking-tight text-on-surface">Community Growth</h2>
+        </div>
+        <div class="flex items-center gap-3">
+            <a asp-controller="Group" asp-action="Create" class="inline-flex items-center px-4 py-2 bg-white text-on-surface rounded-lg hover:bg-white/90 transition-colors">
+                <span class="material-symbols-outlined text-[12px]">manage_accounts</span>
+                <span>Manage Members</span>
+            </a>
+       
+            <a asp-controller="Roadmap" asp-action="index" class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                <span class="material-symbols-outlined text-[12px]">map</span>
+                <span>Manage Roadmap</span>
+            </a>
+        
+        </div>
+    </div>
+
+    <!-- Bento Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6">
+        <!-- Stats Column -->
+        <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-xl border border-outline-variant hover:shadow-md transition-shadow">
+                <p class="text-xs font-medium text-on-surface/60 mb-2">Total Groups</p>
+                <div class="flex items-end justify-between">
+                    <h3 class="text-3xl font-bold font-headline m-0">@Model.Count()</h3>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-outline-variant hover:shadow-md transition-shadow">
+                <p class="text-xs font-medium text-on-surface/60 mb-2">Total Managed Members</p>
+                <h3 class="text-3xl font-bold font-headline text-secondary m-0">@totalMembers</h3>
+            </div>
+            <div class="bg-white p-6 rounded-xl border border-outline-variant hover:shadow-md transition-shadow">
+                <p class="text-xs font-medium text-on-surface/60 mb-2">Active Roadmaps</p>
+                <h3 class="text-3xl font-bold font-headline text-tertiary m-0">@(ViewBag.TotalInstructorRoadmaps ?? 0)</h3>
+            </div>
+
+            <!-- Progress Table -->
+            <div class="col-span-1 sm:col-span-3 bg-white rounded-xl border border-outline-variant overflow-hidden mt-6">
+                <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container/30">
+                    <h4 class="font-bold font-headline text-base m-0">Your Groups</h4>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left mb-0">
+                        <thead class="bg-surface-container-low text-[10px] uppercase tracking-widest text-on-surface/60 font-bold border-b border-outline-variant">
+                            <tr>
+                                <th class="px-6 py-3">Group Name</th>
+                                <th class="px-6 py-3">Description</th>
+                                <th class="px-6 py-3">Roadmap</th>
+                                <th class="px-6 py-3">Students</th>
+                                <th class="px-6 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant">
+                            @if(!Model.Any()) {
+                                <tr><td colspan="5" class="px-6 py-4 text-center text-sm text-on-surface/60">No groups created yet.</td></tr>
+                            }
+                            @foreach (var group in Model)
+                            {
+                                <tr class="hover:bg-surface-container/20 transition-colors">
+                                    <td class="px-6 py-4 flex items-center gap-3">
+                                        <div class="h-8 w-8 rounded bg-primary/10 text-primary flex items-center justify-center font-bold">
+                                            @group.Name.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <span class="font-medium text-sm m-0">@group.Name</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-on-surface/70">@group.Description</td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/10 text-secondary uppercase tracking-tighter">
+                                            @(group.Roadmap?.Title ?? "None")
+                                        </span>
+                                    </td>
+                                     <td class="px-6 py-4 text-sm font-bold">@group.GroupMembers.Count</td>
+                                    <td class="px-6 py-4 text-sm">
+                                        <a asp-controller="Group" asp-action="Details" asp-route-id="@group.Id" class="text-primary hover:underline font-bold text-decoration-none">Manage</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Panel -->
+        <div class="md:col-span-4 space-y-6">
+            
+            
+            <!-- Banner Card -->
+            <section class="relative overflow-hidden rounded-2xl p-6 bg-white border border-outline-variant shadow-sm group">
+                <div class="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 opacity-50"></div>
+                <div class="relative z-10 flex flex-col items-start gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-error"></span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface/60">Notice</span>
+                    </div>
+                    <h3 class="text-xl font-bold font-headline mb-1 text-on-surface m-0">Manage Students</h3>
+                    <p class="text-on-surface/70 text-sm leading-relaxed mb-2 m-0">Click "Manage" on any group to assign roadmaps and track their individual progress!</p>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>                 

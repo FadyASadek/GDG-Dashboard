@@ -20,6 +20,8 @@ namespace GDGDashBoard.DAL.Data
         public DbSet<Resource> Resources => Set<Resource>();
         public DbSet<UserEnrollment> UserEnrollments => Set<UserEnrollment>();
         public DbSet<UserNodeProgress> UserNodeProgresses => Set<UserNodeProgress>();
+        public DbSet<CommunityGroup> CommunityGroups => Set<CommunityGroup>();
+        public DbSet<GroupMember> GroupMembers => Set<GroupMember>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -35,6 +37,7 @@ namespace GDGDashBoard.DAL.Data
             builder.Entity<Resource>().HasQueryFilter(e => !e.IsDeleted);
             builder.Entity<UserEnrollment>().HasQueryFilter(e => !e.IsDeleted);
             builder.Entity<UserNodeProgress>().HasQueryFilter(e => !e.IsDeleted);
+            builder.Entity<CommunityGroup>().HasQueryFilter(e => !e.IsDeleted);
 
             // 2. Relationships Configurations
             builder.Entity<UserProfile>()
@@ -68,6 +71,35 @@ namespace GDGDashBoard.DAL.Data
             builder.Entity<UserEnrollment>()
                 .HasIndex(ue => new { ue.UserId, ue.RoadmapId })
                 .IsUnique();
+
+            // GroupMember Configurations
+            builder.Entity<GroupMember>()
+                .HasKey(gm => new { gm.GroupId, gm.MemberId });
+
+            builder.Entity<GroupMember>()
+                .HasOne(gm => gm.Group)
+                .WithMany(g => g.GroupMembers)
+                .HasForeignKey(gm => gm.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<GroupMember>()
+                .HasOne(gm => gm.Member)
+                .WithMany(m => m.GroupMemberships)
+                .HasForeignKey(gm => gm.MemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // CommunityGroup Relationships Setup
+            builder.Entity<CommunityGroup>()
+                .HasOne(cg => cg.Roadmap)
+                .WithMany(r => r.Groups)
+                .HasForeignKey(cg => cg.RoadmapId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CommunityGroup>()
+                .HasOne(cg => cg.Instructor)
+                .WithMany(u => u.InstructedGroups)
+                .HasForeignKey(cg => cg.InstructorId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // 3. Enum Conversions
             builder.Entity<UserSkill>()

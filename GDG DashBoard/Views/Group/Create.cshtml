@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Create Group";
+    Layout = "_AdminLayout";
+    ViewData["PageTitle"] = "Create Community Group";
+}
+
+<div class="max-w-3xl mx-auto mt-8">
+    <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="bg-surface-container-low px-6 py-4 border-b border-outline-variant flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">groups</span>
+            <h2 class="text-lg font-bold font-headline text-on-surface m-0">Create New Group</h2>
+        </div>
+        
+        <form asp-action="Create" method="post" class="p-6 space-y-6">
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-2">Group Name</label>
+                <input type="text" name="name" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-lg px-4 py-3 text-sm text-on-surface" required placeholder="e.g. Flutter Study Group" />
+            </div>
+            
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-2">Short Description</label>
+                <textarea name="description" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-lg px-4 py-3 text-sm text-on-surface" rows="4" placeholder="About this group..."></textarea>
+            </div>
+            
+            <div class="pt-6 border-t border-outline-variant flex items-center justify-between">
+                <a asp-controller="Instructor" asp-action="Index" class="px-5 py-2.5 rounded-lg font-medium text-sm text-on-surface/70 hover:bg-surface-container-high transition-colors">Cancel</a>
+                <button type="submit" class="bg-primary px-6 py-2.5 rounded-lg font-medium text-sm text-white gdg-shadow hover:bg-[#1a73e8] transition-all">Create Group</button>
+            </div>
+        </form>
+    </div>
+</div>

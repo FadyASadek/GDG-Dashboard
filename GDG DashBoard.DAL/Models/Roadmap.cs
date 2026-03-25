@@ -15,4 +15,5 @@ public class Roadmap : BaseEntity
     public ApplicationUser CreatedBy { get; set; } = null!;
     public ICollection<RoadmapLevel> Levels { get; set; } = new List<RoadmapLevel>();
     public ICollection<UserEnrollment> Enrollments { get; set; } = new List<UserEnrollment>();
+    public ICollection<CommunityGroup> Groups { get; set; } = new List<CommunityGroup>();
 }

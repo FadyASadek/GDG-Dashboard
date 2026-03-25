@@ -4,6 +4,7 @@ using GDGDashBoard.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GDG_DashBoard.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325000520_Update")]
+    partial class Update
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,47 +95,6 @@ namespace GDG_DashBoard.DAL.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("GDG_DashBoard.DAL.Models.CommunityGroup", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("InstructorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("JoinCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("RoadmapId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InstructorId");
-
-                    b.HasIndex("RoadmapId");
-
-                    b.ToTable("CommunityGroups");
                 });
 
             modelBuilder.Entity("GDG_DashBoard.DAL.Models.Education", b =>
@@ -214,24 +176,6 @@ namespace GDG_DashBoard.DAL.Migrations
                     b.HasIndex("UserProfileId");
 
                     b.ToTable("Experiences");
-                });
-
-            modelBuilder.Entity("GDG_DashBoard.DAL.Models.GroupMember", b =>
-                {
-                    b.Property<Guid>("GroupId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("MemberId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("GroupId", "MemberId");
-
-                    b.HasIndex("MemberId");
-
-                    b.ToTable("GroupMembers");
                 });
 
             modelBuilder.Entity("GDG_DashBoard.DAL.Models.Project", b =>
@@ -673,24 +617,6 @@ namespace GDG_DashBoard.DAL.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("GDG_DashBoard.DAL.Models.CommunityGroup", b =>
-                {
-                    b.HasOne("GDG_DashBoard.DAL.Models.ApplicationUser", "Instructor")
-                        .WithMany("InstructedGroups")
-                        .HasForeignKey("InstructorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GDG_DashBoard.DAL.Models.Roadmap", "Roadmap")
-                        .WithMany("Groups")
-                        .HasForeignKey("RoadmapId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Instructor");
-
-                    b.Navigation("Roadmap");
-                });
-
             modelBuilder.Entity("GDG_DashBoard.DAL.Models.Education", b =>
                 {
                     b.HasOne("GDG_DashBoard.DAL.Models.UserProfile", "UserProfile")
@@ -711,25 +637,6 @@ namespace GDG_DashBoard.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("UserProfile");
-                });
-
-            modelBuilder.Entity("GDG_DashBoard.DAL.Models.GroupMember", b =>
-                {
-                    b.HasOne("GDG_DashBoard.DAL.Models.CommunityGroup", "Group")
-                        .WithMany("GroupMembers")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GDG_DashBoard.DAL.Models.ApplicationUser", "Member")
-                        .WithMany("GroupMemberships")
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Group");
-
-                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("GDG_DashBoard.DAL.Models.Project", b =>
@@ -891,25 +798,14 @@ namespace GDG_DashBoard.DAL.Migrations
                 {
                     b.Navigation("Enrollments");
 
-                    b.Navigation("GroupMemberships");
-
-                    b.Navigation("InstructedGroups");
-
                     b.Navigation("Progresses");
 
                     b.Navigation("UserProfile");
                 });
 
-            modelBuilder.Entity("GDG_DashBoard.DAL.Models.CommunityGroup", b =>
-                {
-                    b.Navigation("GroupMembers");
-                });
-
             modelBuilder.Entity("GDG_DashBoard.DAL.Models.Roadmap", b =>
                 {
                     b.Navigation("Enrollments");
-
-                    b.Navigation("Groups");
 
                     b.Navigation("Levels");
                 });

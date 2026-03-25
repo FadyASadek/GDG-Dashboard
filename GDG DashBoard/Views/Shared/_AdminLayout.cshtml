@@ -103,6 +103,16 @@
                 </a>
             }
 
+            @if (!User.IsInRole("Instructor"))
+            {
+                <div class="pt-4 pb-2 px-4 uppercase text-[10px] tracking-wider font-bold text-on-surface/40">Instructor Menu</div>
+                
+                <a class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:text-gdg-blue hover:bg-surface-container-high transition-all @(ViewContext.RouteData.Values["controller"]?.ToString() == "Instructor" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "sidebar-active" : "text-on-surface/70")"
+                   asp-controller="Instructor" asp-action="Index">
+                    <span class="material-symbols-outlined">groups</span>
+                    <span>Instructor Console</span>
+                </a>
+            }
             <!-- Other dummy views removed for explicitly wired navigation as requested -->
         </nav>
 

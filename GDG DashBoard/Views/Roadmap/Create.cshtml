@@ -1,0 +1,53 @@
+@using GDG_DashBoard.DAL.Eums
+@{
+    ViewData["Title"] = "Create Roadmap";
+    Layout = "_AdminLayout";
+    ViewData["PageTitle"] = "Create New Roadmap";
+}
+
+<div class="max-w-3xl mx-auto mt-8">
+    <div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+        <div class="bg-surface-container-low px-6 py-4 border-b border-outline-variant flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary">map</span>
+            <h2 class="text-lg font-bold font-headline text-on-surface m-0">Create New Roadmap</h2>
+        </div>
+        
+        <form asp-action="Create" method="post" class="p-6 space-y-6">
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-2">Roadmap Title</label>
+                <input type="text" name="title" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg px-4 py-3 text-sm text-on-surface" required placeholder="e.g. Backend Developer Journey" />
+            </div>
+            
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-2">Description</label>
+                <textarea name="description" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg px-4 py-3 text-sm text-on-surface" rows="4" placeholder="Brief overview of what students will learn..."></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-2">Difficulty Level</label>
+                    <select name="level" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg px-4 py-3 text-sm text-on-surface" required>
+                        @foreach(var lvl in Enum.GetValues(typeof(DifficultyLevel)))
+                        {
+                            <option value="@lvl">@lvl</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-2">Estimated Total Hours</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-outline">schedule</span>
+                        </div>
+                        <input type="number" name="estimatedTotalHours" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg pl-10 pr-4 py-3 text-sm text-on-surface" value="0" min="0" required />
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pt-6 border-t border-outline-variant flex items-center justify-between">
+                <a asp-action="Index" class="px-5 py-2.5 rounded-lg font-medium text-sm text-on-surface/70 hover:bg-surface-container-high transition-colors">Cancel</a>
+                <button type="submit" class="bg-secondary px-6 py-2.5 rounded-lg font-medium text-sm text-white gdg-shadow hover:bg-[#2d9047] transition-all border-0">Create Roadmap</button>
+            </div>
+        </form>
+    </div>
+</div>

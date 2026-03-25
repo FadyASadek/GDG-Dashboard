@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Join Group";
+    Layout = "_Layout"; 
+}
+
+<div class="container mt-5 mb-5" style="max-width: 600px;">
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-primary text-white text-center py-4 border-0">
+            <h4 class="mb-0 fw-bold"><i class="material-symbols-outlined align-middle me-2 fs-3">group_add</i>Join Group</h4>
+        </div>
+        <div class="card-body p-4 p-md-5 bg-white text-center">
+            
+            <div class="mb-4 text-primary">
+                <i class="material-symbols-outlined display-1 opacity-75">qr_code_scanner</i>
+            </div>
+
+            <p class="text-secondary mb-4 fs-5">You have been invited to join a GDG Community Group! Click below to enter your classroom.</p>
+            
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger border-0 shadow-sm text-start">
+                    <i class="material-symbols-outlined align-middle me-2">error</i>
+                    <strong>Error:</strong> @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <form asp-action="JoinPost" method="post">
+                <div class="mb-5 text-start">
+                    <label class="form-label fw-bold text-secondary text-uppercase small" style="letter-spacing: 1px;">Invitation Code</label>
+                    <input type="text" name="code" class="form-control form-control-lg text-center fw-bold text-primary bg-light" 
+                           value="@ViewBag.JoinCode" 
+                           required 
+                           @(string.IsNullOrEmpty(ViewBag.JoinCode?.ToString()) ? "" : "readonly") 
+                           placeholder="e.g. A1B2C3" 
+                           style="letter-spacing: 5px; font-family: monospace; font-size: 1.5rem;" />
+                    @if(string.IsNullOrEmpty(ViewBag.JoinCode?.ToString()))
+                    {
+                        <div class="form-text mt-2"><i class="material-symbols-outlined align-middle" style="font-size: 14px;">info</i> Please enter the 6-character code provided by your instructor.</div>
+                    }
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm py-3">
+                    <i class="material-symbols-outlined align-middle me-2">login</i> Join Classroom Now
+                </button>
+            </form>
+        </div>
+        <div class="card-footer bg-light text-center py-3 border-0 text-muted small">
+            Secured by GDG Community Platform
+        </div>
+    </div>
+</div>
