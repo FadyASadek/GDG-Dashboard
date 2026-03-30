@@ -1,0 +1,3 @@
+[submodule "services/cv_extractor"]
+	path = services/cv_extractor
+	url = https://github.com/KerolosKaram1/CV_Extractor.git
