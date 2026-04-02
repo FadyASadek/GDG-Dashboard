@@ -3,6 +3,7 @@ using GDG_DashBoard.BLL.Services.Admin;
 using GDG_DashBoard.ViewModels.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GDG_DashBoard.Controllers;
 
@@ -128,5 +129,6 @@ public class AdminController : Controller
 
         return RedirectToAction(nameof(AllMembers));
     }
+
 }
 

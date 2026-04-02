@@ -1,0 +1,123 @@
+@model GDG_DashBoard.DAL.Models.Quiz
+@{
+    ViewData["Title"] = "Quiz Details";
+    Layout = "_AdminLayout";
+    ViewData["PageTitle"] = Model.Title;
+}
+
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-4">
+        <a asp-action="Index" class="w-10 h-10 bg-white border border-outline-variant/20 rounded-xl flex items-center justify-center hover:bg-surface-container transition-all shadow-sm">
+            <span class="material-symbols-outlined text-on-surface/60">arrow_back</span>
+        </a>
+        <div>
+            <h2 class="text-2xl font-black font-headline text-on-surface">@Model.Title</h2>
+            <p class="text-sm text-on-surface/50 mt-0.5">
+                Passing Score: <strong>@Model.PassingScorePercentage%</strong>
+                &nbsp;·&nbsp; Created by: <strong>@Model.CreatedBy.Email</strong>
+                &nbsp;·&nbsp; @Model.Questions.Count Question@(Model.Questions.Count == 1 ? "" : "s")
+            </p>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+        <a asp-action="TakeQuiz" asp-route-id="@Model.Id"
+           class="px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl text-sm font-bold shadow-sm hover:bg-primary hover:text-white transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">play_arrow</span> Preview
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model.Id"
+           class="px-4 py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl text-sm font-bold shadow-sm hover:bg-secondary hover:text-white transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">edit</span> Edit
+        </a>
+        <button type="button" id="deleteBtn"
+                class="px-4 py-2 bg-error/10 text-error border border-error/20 rounded-xl text-sm font-bold shadow-sm hover:bg-error hover:text-white transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">delete</span> Delete
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Description))
+{
+    <div class="bg-white border text-sm border-outline-variant/20 text-on-surface/70 rounded-3xl p-6 mb-8">
+        @Model.Description
+    </div>
+}
+
+<h3 class="text-xl font-black font-headline mb-4">Questions (@Model.Questions.Count)</h3>
+
+<div class="space-y-6">
+    @foreach (var q in Model.Questions.OrderBy(x => x.OrderIndex))
+    {
+        <div class="bg-white border border-outline-variant/20 rounded-3xl p-6 shadow-sm">
+            <h4 class="font-bold text-on-surface mb-4 flex items-start gap-3">
+                <span class="w-7 h-7 rounded-lg bg-primary/10 text-primary text-xs font-black flex items-center justify-center shrink-0 mt-0.5">@(q.OrderIndex + 1)</span>
+                @q.Content
+            </h4>
+            <ul class="space-y-2 pl-10">
+                @foreach (var o in q.Options)
+                {
+                    <li class="flex items-center gap-3 p-3 rounded-xl @(o.IsCorrect ? "bg-secondary/10 border border-secondary/20" : "bg-surface-container-high")">
+                        @if (o.IsCorrect)
+                        {
+                            <span class="material-symbols-outlined text-secondary shrink-0" style="font-variation-settings:'FILL' 1;">check_circle</span>
+                        }
+                        else
+                        {
+                            <div class="w-5 h-5 rounded-full border-2 border-outline-variant/30 flex-shrink-0"></div>
+                        }
+                        <span class="text-sm @(o.IsCorrect ? "text-secondary font-bold" : "text-on-surface/70")">@o.Text</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+        <div class="w-14 h-14 rounded-2xl bg-error/10 flex items-center justify-center mb-5 mx-auto">
+            <span class="material-symbols-outlined text-error text-3xl" style="font-variation-settings:'FILL' 1;">delete_forever</span>
+        </div>
+        <h3 class="text-xl font-black font-headline text-center mb-2">Delete Quiz?</h3>
+        <p class="text-sm text-on-surface/60 text-center mb-6">
+            This will permanently delete <strong>"@Model.Title"</strong> and all its questions, options, and attempt history. This action cannot be undone.
+        </p>
+        <div class="flex gap-3">
+            <button type="button" id="cancelDelete"
+                    class="flex-1 py-3 rounded-xl border border-outline-variant/30 text-sm font-bold text-on-surface/70 hover:bg-surface-container transition-all">
+                Cancel
+            </button>
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="flex-1">
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        class="w-full py-3 rounded-xl bg-error text-white text-sm font-bold hover:bg-error/90 transition-all shadow-md">
+                    Yes, Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const deleteBtn = document.getElementById('deleteBtn');
+        const deleteModal = document.getElementById('deleteModal');
+        const cancelDelete = document.getElementById('cancelDelete');
+
+        deleteBtn?.addEventListener('click', () => {
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+        });
+        cancelDelete?.addEventListener('click', () => {
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+        });
+        deleteModal?.addEventListener('click', (e) => {
+            if (e.target === deleteModal) {
+                deleteModal.classList.add('hidden');
+                deleteModal.classList.remove('flex');
+            }
+        });
+    </script>
+}

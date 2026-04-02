@@ -51,13 +51,14 @@ public class RoadmapService : IRoadmapService
             .FirstOrDefaultAsync(r => r.Id == roadmapId);
     }
 
-    public async Task<RoadmapLevel> AddLevelAsync(Guid roadmapId, string title, string? instructions, int orderIndex)
+    public async Task<RoadmapLevel> AddLevelAsync(Guid roadmapId, string title, string? instructions, int orderIndex, Guid? quizId = null)
     {
         var level = new RoadmapLevel
         {
             RoadmapId = roadmapId,
             Title = title,
             Instructions = instructions,
+            KnowledgeCheckQuizId = quizId,
             OrderIndex = orderIndex
         };
 

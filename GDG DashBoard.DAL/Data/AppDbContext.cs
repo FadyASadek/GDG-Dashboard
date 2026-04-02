@@ -22,7 +22,11 @@ namespace GDGDashBoard.DAL.Data
         public DbSet<UserNodeProgress> UserNodeProgresses => Set<UserNodeProgress>();
         public DbSet<CommunityGroup> CommunityGroups => Set<CommunityGroup>();
         public DbSet<GroupMember> GroupMembers => Set<GroupMember>();
-
+        public DbSet<Quiz> Quizzes => Set<Quiz>();
+        public DbSet<QuizQuestion> QuizQuestions => Set<QuizQuestion>();
+        public DbSet<QuizOption> QuizOptions => Set<QuizOption>();
+        public DbSet<UserQuizAttempt> UserQuizAttempts => Set<UserQuizAttempt>();
+        public DbSet<UserResourceProgress> UserResourceProgresses => Set<UserResourceProgress>();
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); 
@@ -38,6 +42,11 @@ namespace GDGDashBoard.DAL.Data
             builder.Entity<UserEnrollment>().HasQueryFilter(e => !e.IsDeleted);
             builder.Entity<UserNodeProgress>().HasQueryFilter(e => !e.IsDeleted);
             builder.Entity<CommunityGroup>().HasQueryFilter(e => !e.IsDeleted);
+            builder.Entity<Quiz>().HasQueryFilter(e => !e.IsDeleted);
+            builder.Entity<QuizQuestion>().HasQueryFilter(e => !e.IsDeleted);
+            builder.Entity<QuizOption>().HasQueryFilter(e => !e.IsDeleted);
+            builder.Entity<UserQuizAttempt>().HasQueryFilter(e => !e.IsDeleted);
+            builder.Entity<UserResourceProgress>().HasQueryFilter(e => !e.IsDeleted);
 
             // 2. Relationships Configurations
             builder.Entity<UserProfile>()
@@ -101,6 +110,59 @@ namespace GDGDashBoard.DAL.Data
                 .HasForeignKey(cg => cg.InstructorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Quiz Relationships
+            builder.Entity<Quiz>()
+                .HasOne(q => q.CreatedBy)
+                .WithMany()
+                .HasForeignKey(q => q.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<QuizQuestion>()
+                .HasOne(qq => qq.Quiz)
+                .WithMany(q => q.Questions)
+                .HasForeignKey(qq => qq.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<QuizOption>()
+                .HasOne(qo => qo.Question)
+                .WithMany(qq => qq.Options)
+                .HasForeignKey(qo => qo.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserQuizAttempt>()
+                .HasOne(uqa => uqa.User)
+                .WithMany()
+                .HasForeignKey(uqa => uqa.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserQuizAttempt>()
+                .HasOne(uqa => uqa.Quiz)
+                .WithMany(q => q.Attempts)
+                .HasForeignKey(uqa => uqa.QuizId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<RoadmapLevel>()
+                .HasOne(rl => rl.KnowledgeCheckQuiz)
+                .WithMany(q => q.RoadmapLevels)
+                .HasForeignKey(rl => rl.KnowledgeCheckQuizId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserResourceProgress>()
+                .HasOne(rp => rp.Resource)
+                .WithMany()
+                .HasForeignKey(rp => rp.ResourceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserResourceProgress>()
+                .HasOne(rp => rp.User)
+                .WithMany()
+                .HasForeignKey(rp => rp.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserResourceProgress>()
+                .HasIndex(rp => new { rp.UserId, rp.ResourceId })
+                .IsUnique();
+
             // 3. NewSequentialId Configuration (Prevent GUID Index Fragmentation)
             builder.Entity<UserProfile>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
             builder.Entity<UserSkill>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
@@ -113,6 +175,11 @@ namespace GDGDashBoard.DAL.Data
             builder.Entity<UserEnrollment>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
             builder.Entity<UserNodeProgress>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
             builder.Entity<CommunityGroup>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
+            builder.Entity<Quiz>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
+            builder.Entity<QuizQuestion>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
+            builder.Entity<QuizOption>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
+            builder.Entity<UserQuizAttempt>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
+            builder.Entity<UserResourceProgress>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
 
             // 4. Performance Filtered Indexes (Skip Soft-Deleted rows)
             builder.Entity<UserEnrollment>().HasIndex(x => x.UserId).HasFilter("[IsDeleted] = 0");

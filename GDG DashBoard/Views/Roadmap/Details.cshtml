@@ -172,6 +172,21 @@
                 <p class="text-[10px] text-on-surface/50 mt-1">Determines the order of levels.</p>
             </div>
 
+            <div>
+                <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-1">Knowledge Check Quiz (Optional)</label>
+                <select name="quizId" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary rounded-lg px-4 py-2.5 text-sm">
+                    <option value="">-- No Quiz Required --</option>
+                    @if (ViewBag.AvailableQuizzes != null)
+                    {
+                        foreach (var q in (IEnumerable<GDG_DashBoard.DAL.Models.Quiz>)ViewBag.AvailableQuizzes)
+                        {
+                            <option value="@q.Id">@q.Title (Pass: @q.PassingScorePercentage%)</option>
+                        }
+                    }
+                </select>
+                <p class="text-[10px] text-on-surface/50 mt-1">Users must pass this quiz to complete the level.</p>
+            </div>
+
             <button type="submit" class="w-full bg-secondary text-white py-3 rounded-lg font-bold hover:shadow-lg transition-all active:scale-[0.98] border-0 mt-2">Create Level</button>
         </form>
     </div>
@@ -198,7 +213,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-1">Resource Type</label>
-                    <select name="type" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-lg px-4 py-2.5 text-sm" required>
+                    <select id="resourceTypeSelect" name="type" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-lg px-4 py-2.5 text-sm" required onchange="toggleResourceInput()">
                         @foreach(var t in Enum.GetValues(typeof(ResourceType)))
                         {
                             <option value="@t">@t</option>
@@ -211,9 +226,24 @@
                 </div>
             </div>
             
-            <div>
+            <div id="urlInputContainer">
                 <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-1">URL / Link</label>
-                <input type="url" name="url" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-lg px-4 py-2.5 text-sm" required placeholder="https://..." />
+                <input type="url" id="resourceUrl" name="url" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-lg px-4 py-2.5 text-sm" required placeholder="https://..." />
+            </div>
+
+            <div id="quizSelectContainer" class="hidden">
+                 <label class="block text-[11px] font-bold uppercase tracking-widest text-on-surface/60 mb-1">Select Practice Quiz</label>
+                 <select id="resourceQuizSelect" class="w-full bg-surface-container-lowest border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-lg px-4 py-2.5 text-sm" onchange="updateQuizUrl()">
+                     <option value="">-- Choose a Quiz --</option>
+                     @if (ViewBag.AvailableQuizzes != null)
+                     {
+                         foreach(var q in (IEnumerable<GDG_DashBoard.DAL.Models.Quiz>)ViewBag.AvailableQuizzes)
+                         {
+                             <option value="/Quiz/TakeQuiz/@q.Id?roadmapId=@Model.Id">@q.Title</option>
+                         }
+                     }
+                 </select>
+                 <p class="text-[10px] text-on-surface/50 mt-1">This will be added as a practice resource (not a mandatory check).</p>
             </div>
 
             <div>
@@ -231,6 +261,41 @@
         function openAddResourceModal(levelId) {
             document.getElementById('modalLevelId').value = levelId;
             document.getElementById('addResourceModal').classList.remove('hidden');
+        }
+
+        function toggleResourceInput() {
+            const type = document.getElementById('resourceTypeSelect').value;
+            const urlContainer = document.getElementById('urlInputContainer');
+            const quizContainer = document.getElementById('quizSelectContainer');
+            const urlInput = document.getElementById('resourceUrl');
+            const quizSelect = document.getElementById('resourceQuizSelect');
+
+            if (type === 'Quiz') {
+                urlContainer.classList.add('hidden');
+                quizContainer.classList.remove('hidden');
+                urlInput.removeAttribute('required');
+                urlInput.type = 'hidden';
+                updateQuizUrl(); 
+            } else {
+                quizContainer.classList.add('hidden');
+                urlContainer.classList.remove('hidden');
+                urlInput.setAttribute('required', 'required');
+                urlInput.type = 'url';
+                if (urlInput.value.includes('/Quiz/TakeQuiz/')) {
+                    urlInput.value = '';
+                }
+            }
+        }
+
+        function updateQuizUrl() {
+            const quizSelect = document.getElementById('resourceQuizSelect');
+            const urlInput = document.getElementById('resourceUrl');
+            
+            if (quizSelect.value) {
+                urlInput.value = quizSelect.value;
+            } else {
+                urlInput.value = '';
+            }
         }
     </script>
 }

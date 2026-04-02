@@ -196,6 +196,69 @@
         </div>
     }
 
+    <!-- ══ LEARNING JOURNEY & ACHIEVEMENTS ═══════════════════════════ -->
+    @if (profile.CompletedRoadmaps.Any() || profile.CompletedLevels.Any() || profile.PassedQuizzes.Any())
+    {
+        <section class="space-y-6">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-2xl text-tertiary">workspace_premium</span>
+                <h2 class="text-xl font-bold tracking-tight font-headline">Learning Journey & Achievements</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                
+                <!-- Completed Roadmaps -->
+                @foreach (var rm in profile.CompletedRoadmaps)
+                {
+                    <div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/15 flex flex-col items-center text-center relative overflow-hidden group hover:shadow-md transition-all">
+                        <div class="absolute inset-0 bg-gradient-to-br from-tertiary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="w-14 h-14 rounded-full bg-tertiary/10 text-tertiary flex items-center justify-center mb-4 shadow-sm border border-tertiary/20">
+                            <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1;">emoji_events</span>
+                        </div>
+                        <h4 class="font-bold text-on-surface mb-1">@rm.Title</h4>
+                        <span class="text-[10px] font-black uppercase text-on-surface/40 tracking-widest bg-surface-container py-1 px-2 rounded-md">Roadmap Completed</span>
+                        <p class="text-xs font-medium text-on-surface/50 mt-3">@rm.CompletedAt.ToString("MMM dd, yyyy")</p>
+                    </div>
+                }
+
+                <!-- Completed Levels -->
+                @foreach (var lvl in profile.CompletedLevels)
+                {
+                    <div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/15 flex flex-col items-start relative overflow-hidden group hover:shadow-md transition-all">
+                        <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
+                            <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">flag</span>
+                        </div>
+                        <h4 class="font-bold text-on-surface mb-1 line-clamp-2">@lvl.LevelTitle</h4>
+                        <p class="text-[11px] font-bold text-on-surface/50 mb-3 truncate w-full">in @lvl.RoadmapTitle</p>
+                        <div class="mt-auto pt-3 border-t border-outline-variant/10 w-full flex justify-between items-center">
+                            <span class="text-[10px] font-black uppercase text-primary tracking-widest">Level</span>
+                            <span class="text-[10px] font-medium text-on-surface/40">@lvl.CompletedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                }
+
+                <!-- Passed Quizzes -->
+                @foreach (var qz in profile.PassedQuizzes)
+                {
+                    <div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/15 flex flex-col items-start relative overflow-hidden group hover:shadow-md transition-all">
+                        <div class="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center mb-3">
+                            <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">psychology</span>
+                        </div>
+                        <h4 class="font-bold text-on-surface mb-1 line-clamp-2">@qz.Title</h4>
+                        <div class="mt-auto pt-3 border-t border-outline-variant/10 w-full flex justify-between items-center">
+                            <span class="text-[10px] font-black uppercase text-secondary tracking-widest">Quiz Passed</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs font-black text-secondary">@qz.Score%</span>
+                                <span class="text-[9px] font-medium text-on-surface/40">@qz.PassedAt.ToString("MM/dd/yy")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </section>
+    }
+
     <!-- ══ CV / PORTFOLIO DATA (BELOW ACTIVE WIDGETS) ════════════════ -->
 
     <!-- Professional Summary -->

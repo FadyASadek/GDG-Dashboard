@@ -6,38 +6,49 @@
     ViewData["PageTitle"] = Model.Title;
 
     var completedLevelIds = ViewBag.CompletedLevelIds as HashSet<Guid> ?? new HashSet<Guid>();
+    var completedResourceIds = ViewBag.CompletedResourceIds as HashSet<Guid> ?? new HashSet<Guid>();
+    var quizAttemptStatus = ViewBag.QuizAttemptStatus as Dictionary<Guid, (bool IsPassed, int Score)> ?? new Dictionary<Guid, (bool, int)>();
     int totalLevels = ViewBag.TotalLevels ?? 0;
     int completedCount = ViewBag.CompletedCount ?? 0;
-    int progressPct = totalLevels > 0 ? (int)Math.Round((double)completedCount / totalLevels * 100) : 0;
+    int totalResources = ViewBag.TotalResources ?? 0;
+    int completedResources = ViewBag.CompletedResources ?? 0;
+    int levelPct = totalLevels > 0 ? (int)Math.Round((double)completedCount / totalLevels * 100) : 0;
+    int resourcePct = totalResources > 0 ? (int)Math.Round((double)completedResources / totalResources * 100) : 0;
+    int overallPct = (levelPct + resourcePct) / 2;
     bool isEnrolled = ViewBag.IsEnrolled ?? false;
 }
 
 @if (isEnrolled)
 {
-    <!-- ══ STICKY PROGRESS BAR (Enrolled Only) ═══════════════════════════ -->
+    <!-- ══ STICKY DUAL PROGRESS BAR ══ -->
     <div id="stickyProgress" class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-outline-variant/15 px-6 py-3 -mx-4 md:-mx-8 -mt-4 md:-mt-8 mb-8 shadow-sm">
-        <div class="max-w-5xl mx-auto flex items-center gap-4">
-            <a asp-controller="Member" asp-action="MyRoadmaps" class="w-9 h-9 rounded-xl bg-surface-container-high flex items-center justify-center hover:bg-surface-container-highest transition-colors shrink-0 shadow-sm">
-                <span class="material-symbols-outlined text-on-surface/60 text-xl">arrow_back</span>
-            </a>
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between mb-1.5">
-                    <h2 class="text-sm font-bold text-on-surface truncate">@Model.Title</h2>
-                    <span id="progressText" class="text-xs font-black text-primary tabular-nums">@progressPct%</span>
-                </div>
-                <div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
-                    <div id="progressBar" class="h-full bg-gradient-to-r from-primary via-[#8ab4f8] to-secondary rounded-full transition-all duration-700 ease-out" style="width: @progressPct%"></div>
+        <div class="max-w-5xl mx-auto">
+            <div class="flex items-center gap-4 mb-2">
+                <a asp-controller="Member" asp-action="MyRoadmaps" class="w-9 h-9 rounded-xl bg-surface-container-high flex items-center justify-center hover:bg-surface-container-highest transition-colors shrink-0 shadow-sm">
+                    <span class="material-symbols-outlined text-on-surface/60 text-xl">arrow_back</span>
+                </a>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1">
+                        <h2 class="text-sm font-bold text-on-surface truncate">@Model.Title</h2>
+                        <span id="overallText" class="text-xs font-black text-primary tabular-nums ml-2 shrink-0">@overallPct% Overall</span>
+                    </div>
+                    <!-- Overall blended bar -->
+                    <div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden mb-1.5">
+                        <div id="overallBar" class="h-full bg-gradient-to-r from-primary via-[#8ab4f8] to-secondary rounded-full transition-all duration-700 ease-out" style="width: @overallPct%"></div>
+                    </div>
+                    <!-- Dual mini indicators -->
+                    <div class="flex gap-4 text-[10px] font-bold text-on-surface/40">
+                        <span>🏆 Levels: <span id="levelPctText">@levelPct%</span> (<span id="levelCountText">@completedCount</span>/<span id="levelTotalText">@totalLevels</span>)</span>
+                        <span>📚 Resources: <span id="resPctText">@resourcePct%</span> (<span id="resCountText">@completedResources</span>/<span id="resTotalText">@totalResources</span>)</span>
+                    </div>
                 </div>
             </div>
-            <span id="progressBadge" class="hidden sm:inline-flex px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider @(progressPct >= 100 ? "bg-secondary/10 text-secondary" : "bg-primary/10 text-primary")">
-                @completedCount / @totalLevels
-            </span>
         </div>
     </div>
 }
 else
 {
-    <!-- ══ READ-ONLY BANNER (Public View) ════════════════════════════════ -->
+    <!-- ══ READ-ONLY BANNER ══ -->
     <div class="mb-8 -mx-4 md:-mx-8 -mt-4 md:-mt-8 px-6 py-4 bg-gradient-to-r from-tertiary/10 via-tertiary/5 to-transparent border-b border-tertiary/15">
         <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3">
@@ -56,27 +67,26 @@ else
 
 <div class="max-w-5xl mx-auto px-4 pb-16">
 
-    <!-- ══ ROADMAP HEADER ════════════════════════════════════════════════ -->
+    <!-- ══ ROADMAP HEADER ══ -->
     <div class="mb-10">
-        <div class="flex flex-wrap items-center gap-3 mb-3">
-            <span class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary">@Model.Level</span>
-            <span class="text-xs font-bold text-on-surface/40 flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">schedule</span> ~@Model.EstimatedTotalHours hrs
-            </span>
-            <span class="text-xs font-bold text-on-surface/40 flex items-center gap-1">
-                <span class="material-symbols-outlined text-sm">layers</span> @Model.Levels.Count levels
-            </span>
+        <div class="flex flex-wrap items-start gap-4 mb-4">
+            <div class="flex-1 min-w-0">
+                <h1 class="text-3xl font-black tracking-tight font-headline text-on-surface">@Model.Title</h1>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="mt-2 text-on-surface/60 text-sm leading-relaxed max-w-2xl">@Model.Description</p>
+                }
+            </div>
+            <div class="flex flex-wrap gap-2 shrink-0">
+                <span class="px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider bg-primary/8 text-primary">@Model.Level</span>
+                <span class="px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider bg-surface-container-high text-on-surface/60">@Model.Levels.Count Levels</span>
+            </div>
         </div>
-        @if (!string.IsNullOrEmpty(Model.Description))
-        {
-            <p class="text-on-surface/60 text-sm leading-relaxed max-w-3xl">@Model.Description</p>
-        }
     </div>
 
-    <!-- ══ VERTICAL TIMELINE / STEPPER ════════════════════════════════ -->
-    <div class="relative">
-        <!-- Timeline Line -->
-        <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/20 via-outline-variant/15 to-transparent"></div>
+    <!-- ══ TIMELINE ══ -->
+    <div class="relative pl-0">
+        <div class="absolute left-[23px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-primary/20 via-outline-variant/10 to-transparent pointer-events-none"></div>
 
         @{ var orderedLevels = Model.Levels.OrderBy(l => l.OrderIndex).ToList(); }
         @for (int i = 0; i < orderedLevels.Count; i++)
@@ -84,17 +94,17 @@ else
             var level = orderedLevels[i];
             var isCompleted = completedLevelIds.Contains(level.Id);
             var levelIndex = i;
+            var orderedResources = level.Resources.OrderBy(r => r.OrderIndex).ToList();
+            int lvlTotal = orderedResources.Count;
+            int lvlDone = orderedResources.Count(r => completedResourceIds.Contains(r.Id));
 
             <div class="relative flex gap-6 mb-10 group" data-level-id="@level.Id">
                 <!-- Timeline Node -->
                 <div class="relative z-10 shrink-0">
                     @if (isEnrolled)
                     {
-                        <button type="button"
-                                class="level-toggle w-12 h-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 active:scale-95 shadow-sm
-                                       @(isCompleted ? "bg-secondary border-secondary text-white shadow-lg shadow-secondary/25" : "bg-white border-outline-variant/30 text-on-surface/40 hover:border-primary hover:text-primary hover:shadow-md")"
-                                data-level-id="@level.Id"
-                                title="@(isCompleted ? "Mark as incomplete" : "Mark as complete")">
+                        <div class="w-12 h-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-300 shadow-sm
+                                    @(isCompleted ? "bg-secondary border-secondary text-white shadow-lg shadow-secondary/25" : "bg-white border-outline-variant/30 text-on-surface/40")">
                             @if (isCompleted)
                             {
                                 <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">check_circle</span>
@@ -103,7 +113,7 @@ else
                             {
                                 <span class="text-sm font-black">@(levelIndex + 1)</span>
                             }
-                        </button>
+                        </div>
                     }
                     else
                     {
@@ -116,24 +126,93 @@ else
                 <!-- Level Content -->
                 <div class="flex-1 pb-2 -mt-0.5">
                     <div class="flex items-center gap-3 mb-1">
-                        <h3 class="text-lg font-bold font-headline text-on-surface @(isCompleted ? "line-through opacity-50" : "")">@level.Title</h3>
+                        <h3 class="text-lg font-bold font-headline text-on-surface level-title-@level.Id @(isCompleted ? "line-through opacity-50" : "")">@level.Title</h3>
                         @if (isCompleted)
                         {
-                            <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-secondary/10 text-secondary">Done</span>
+                            <span class="level-badge-@level.Id px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-secondary/10 text-secondary">Done</span>
+                        }
+                        else
+                        {
+                            <span class="level-badge-@level.Id hidden px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-secondary/10 text-secondary">Done</span>
                         }
                     </div>
+
+                    @if (isEnrolled && lvlTotal > 0)
+                    {
+                        <!-- Mini resource progress bar inside level -->
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="flex-1 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+                                <div class="level-res-bar-@level.Id h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500" style="width: @(lvlTotal > 0 ? lvlDone * 100 / lvlTotal : 0)%"></div>
+                            </div>
+                            <span class="level-res-text-@level.Id text-[10px] font-black text-on-surface/40 tabular-nums">@lvlDone/@lvlTotal</span>
+                        </div>
+                    }
 
                     @if (!string.IsNullOrEmpty(level.Instructions))
                     {
                         <p class="text-sm text-on-surface/50 mb-4 max-w-2xl leading-relaxed">@level.Instructions</p>
                     }
 
+                    <!-- Knowledge Check badge if present -->
+                    @if (level.KnowledgeCheckQuizId.HasValue && isEnrolled)
+                    {
+                        var qid = level.KnowledgeCheckQuizId.Value;
+                        bool hasAttempt = quizAttemptStatus.ContainsKey(qid);
+                        bool passed = hasAttempt && quizAttemptStatus[qid].IsPassed;
+                        int score = hasAttempt ? quizAttemptStatus[qid].Score : 0;
+
+                        <div class="mb-4 inline-flex items-center gap-3 p-3 rounded-2xl border-2 @(passed ? "bg-secondary/10 border-secondary/20 text-secondary" : "bg-error/8 border-error/20 text-error")">
+                            <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">@(passed ? "check_circle" : "psychology")</span>
+                            <div class="flex-1">
+                                @if (passed)
+                                {
+                                    <p class="text-sm font-black m-0">Knowledge Check — Passed! 🎉</p>
+                                    <p class="text-[11px] font-bold opacity-80 m-0">Your score: <strong>@score%</strong></p>
+                                }
+                                else if (hasAttempt)
+                                {
+                                    <p class="text-sm font-black m-0">Knowledge Check — Try Again</p>
+                                    <p class="text-[11px] font-bold opacity-80 m-0">Last score: <strong>@score%</strong> — didn't pass.</p>
+                                }
+                                else
+                                {
+                                    <p class="text-sm font-black m-0">Knowledge Check Required</p>
+                                    <p class="text-[11px] font-bold opacity-80 m-0">You must pass the quiz to complete this level.</p>
+                                }
+                            </div>
+                            <a asp-controller="Quiz" asp-action="TakeQuiz"
+                               asp-route-id="@qid"
+                               asp-route-roadmapId="@Model.Id"
+                               asp-route-levelId="@level.Id"
+                               class="px-4 py-1.5 rounded-lg text-xs font-black shadow-md hover:-translate-y-0.5 transition-all outline-none
+                                      @(passed ? "bg-secondary text-white" : "bg-error text-white")">
+                                @(passed ? "Retake" : (hasAttempt ? "Try Again" : "Take Quiz"))
+                            </a>
+                        </div>
+                    }
+
                     <!-- Resource Cards -->
-                    @if (level.Resources.Any())
+                    @if (orderedResources.Any())
                     {
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                            @foreach (var res in level.Resources.OrderBy(r => r.OrderIndex))
+                            @foreach (var res in orderedResources)
                             {
+                                bool resCompleted = completedResourceIds.Contains(res.Id);
+                                bool isQuizRes = res.Type == GDG_DashBoard.DAL.Eums.ResourceType.Quiz;
+
+                                // For Quiz resources, try to extract quiz ID from URL: /Quiz/TakeQuiz/{id}
+                                Guid? resQuizId = null;
+                                if (isQuizRes && res.Url.Contains("/Quiz/TakeQuiz/"))
+                                {
+                                    var parts = res.Url.Split('/');
+                                    var idStr = parts.LastOrDefault()?.Split('?').FirstOrDefault();
+                                    if (Guid.TryParse(idStr, out var parsed)) resQuizId = parsed;
+                                }
+
+                                bool quizPassed = resQuizId.HasValue && quizAttemptStatus.ContainsKey(resQuizId.Value) && quizAttemptStatus[resQuizId.Value].IsPassed;
+                                bool quizAttempted = resQuizId.HasValue && quizAttemptStatus.ContainsKey(resQuizId.Value);
+                                int quizScore = (resQuizId.HasValue && quizAttemptStatus.ContainsKey(resQuizId.Value)) ? quizAttemptStatus[resQuizId.Value].Score : 0;
+
                                 string icon = res.Type switch
                                 {
                                     GDG_DashBoard.DAL.Eums.ResourceType.VideoCourse => "play_circle",
@@ -159,23 +238,92 @@ else
                                     _ => "text-on-surface/50 bg-surface-container-high"
                                 };
 
-                                <a href="@res.Url" target="_blank" rel="noopener"
-                                   class="flex items-center gap-3.5 p-4 bg-white border border-outline-variant/12 rounded-2xl hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200 group/card">
-                                    <div class="w-11 h-11 rounded-xl @typeColor flex items-center justify-center shrink-0">
-                                        <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">@icon</span>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <h4 class="text-sm font-bold text-on-surface truncate group-hover/card:text-primary transition-colors">@res.Title</h4>
-                                        <div class="flex items-center gap-2 mt-0.5">
-                                            <span class="text-[10px] font-black uppercase tracking-wider text-on-surface/35">@typeLabel</span>
-                                            @if (res.EstimatedMinutes > 0)
+                                if (isQuizRes)
+                                {
+                                    <!-- Quiz Resource — Auto-state, no manual checkbox -->
+                                    <div class="flex items-center gap-3.5 p-4 rounded-2xl border transition-all duration-200
+                                                @(quizPassed ? "bg-secondary/5 border-secondary/30" : (quizAttempted ? "bg-error/5 border-error/20" : "bg-white border-outline-variant/12"))">
+                                        <div class="w-11 h-11 rounded-xl @typeColor flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">@icon</span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-sm font-bold text-on-surface truncate">@res.Title</h4>
+                                            @if (quizPassed)
                                             {
-                                                <span class="text-[10px] font-bold text-on-surface/25">• @res.EstimatedMinutes min</span>
+                                                <p class="text-[11px] font-bold text-secondary mt-0.5">✅ Passed — Score: <strong>@quizScore%</strong></p>
+                                            }
+                                            else if (quizAttempted)
+                                            {
+                                                <p class="text-[11px] font-bold text-error mt-0.5">❌ Score: <strong>@quizScore%</strong> — Try Again</p>
+                                            }
+                                            else
+                                            {
+                                                <p class="text-[11px] font-bold text-on-surface/40 mt-0.5">Not attempted yet</p>
                                             }
                                         </div>
+                                        <a href="@res.Url" class="px-3 py-1.5 rounded-lg text-[11px] font-black shadow-sm shrink-0
+                                                   @(quizPassed ? "bg-secondary/10 text-secondary" : "bg-primary text-white hover:bg-primary/90")
+                                                   hover:-translate-y-0.5 transition-all">
+                                            @(quizPassed ? "Retake" : (quizAttempted ? "Try Again" : "Start"))
+                                        </a>
                                     </div>
-                                    <span class="material-symbols-outlined text-on-surface/15 group-hover/card:text-primary transition-colors text-lg">open_in_new</span>
-                                </a>
+                                }
+                                else if (isEnrolled)
+                                {
+                                    <!-- Normal Resource — Manual Checkbox -->
+                                    <div class="flex items-center gap-3 p-4 rounded-2xl border transition-all duration-200 group/card resource-card
+                                                @(resCompleted ? "bg-secondary/5 border-secondary/25" : "bg-white border-outline-variant/12 hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5")"
+                                         data-resource-id="@res.Id" data-level-id="@level.Id" data-level-total="@lvlTotal">
+                                        <!-- Checkbox -->
+                                        <button type="button"
+                                                class="resource-checkbox shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200
+                                                       @(resCompleted ? "bg-secondary border-secondary text-white" : "bg-white border-outline-variant/40 hover:border-primary")"
+                                                data-resource-id="@res.Id"
+                                                title="@(resCompleted ? "Mark as not done" : "Mark as done")">
+                                            @if (resCompleted)
+                                            {
+                                                <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">check</span>
+                                            }
+                                        </button>
+                                        <a href="@res.Url" target="_blank" rel="noopener" class="flex-1 flex items-center gap-3 min-w-0">
+                                            <div class="w-11 h-11 rounded-xl @typeColor flex items-center justify-center shrink-0">
+                                                <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">@icon</span>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <h4 class="text-sm font-bold text-on-surface truncate @(resCompleted ? "line-through opacity-50" : "group-hover/card:text-primary") transition-colors">@res.Title</h4>
+                                                <div class="flex items-center gap-2 mt-0.5">
+                                                    <span class="text-[10px] font-black uppercase tracking-wider text-on-surface/35">@typeLabel</span>
+                                                    @if (res.EstimatedMinutes > 0)
+                                                    {
+                                                        <span class="text-[10px] font-bold text-on-surface/25">• @res.EstimatedMinutes min</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <span class="material-symbols-outlined text-on-surface/15 group-hover/card:text-primary transition-colors text-lg">open_in_new</span>
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- Read-Only View (not enrolled) -->
+                                    <a href="@res.Url" target="_blank" rel="noopener"
+                                       class="flex items-center gap-3.5 p-4 bg-white border border-outline-variant/12 rounded-2xl hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200 group/card">
+                                        <div class="w-11 h-11 rounded-xl @typeColor flex items-center justify-center shrink-0">
+                                            <span class="material-symbols-outlined text-xl" style="font-variation-settings:'FILL' 1;">@icon</span>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-sm font-bold text-on-surface truncate group-hover/card:text-primary transition-colors">@res.Title</h4>
+                                            <div class="flex items-center gap-2 mt-0.5">
+                                                <span class="text-[10px] font-black uppercase tracking-wider text-on-surface/35">@typeLabel</span>
+                                                @if (res.EstimatedMinutes > 0)
+                                                {
+                                                    <span class="text-[10px] font-bold text-on-surface/25">• @res.EstimatedMinutes min</span>
+                                                }
+                                            </div>
+                                        </div>
+                                        <span class="material-symbols-outlined text-on-surface/15 group-hover/card:text-primary transition-colors text-lg">open_in_new</span>
+                                    </a>
+                                }
                             }
                         </div>
                     }
@@ -197,60 +345,96 @@ else
 {
     @section Scripts {
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                document.querySelectorAll('.level-toggle').forEach(btn => {
-                    btn.addEventListener('click', async function () {
-                        const levelId = this.dataset.levelId;
-                        const button = this;
-                        button.classList.add('animate-pulse');
-                        try {
-                            const res = await fetch('/Member/ToggleNodeProgress', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ levelId })
-                            });
-                            const data = await res.json();
-                            if (data.success) {
-                                if (data.isCompleted) {
-                                    button.className = 'level-toggle w-12 h-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 active:scale-95 shadow-lg bg-secondary border-secondary text-white shadow-secondary/25';
-                                    button.innerHTML = '<span class="material-symbols-outlined text-xl" style="font-variation-settings:\'FILL\' 1;">check_circle</span>';
-                                } else {
-                                    button.className = 'level-toggle w-12 h-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-110 active:scale-95 shadow-sm bg-white border-outline-variant/30 text-on-surface/40 hover:border-primary hover:text-primary hover:shadow-md';
-                                    const idx = Array.from(document.querySelectorAll('.level-toggle')).indexOf(button) + 1;
-                                    button.innerHTML = '<span class="text-sm font-black">' + idx + '</span>';
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.resource-checkbox').forEach(btn => {
+                btn.addEventListener('click', async function () {
+                    const resourceId = this.dataset.resourceId;
+                    const card = document.querySelector(`.resource-card[data-resource-id="${resourceId}"]`);
+                    const levelId = card?.dataset.levelId;
+                    btn.classList.add('animate-pulse', 'opacity-50');
+
+                    try {
+                        const res = await fetch('/Member/ToggleResourceProgress', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ resourceId })
+                        });
+                        const data = await res.json();
+                        if (!data.success) return;
+
+                        const isNowDone = data.isCompleted;
+
+                        // Update checkbox appearance
+                        if (isNowDone) {
+                            btn.className = 'resource-checkbox shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 bg-secondary border-secondary text-white';
+                            btn.innerHTML = '<span class="material-symbols-outlined text-sm" style="font-variation-settings:\'FILL\' 1;">check</span>';
+                            card.classList.remove('bg-white', 'border-outline-variant/12', 'hover:shadow-lg', 'hover:border-primary/20', 'hover:-translate-y-0.5');
+                            card.classList.add('bg-secondary/5', 'border-secondary/25');
+                        } else {
+                            btn.className = 'resource-checkbox shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 bg-white border-outline-variant/40 hover:border-primary';
+                            btn.innerHTML = '';
+                            card.classList.add('bg-white', 'border-outline-variant/12', 'hover:shadow-lg', 'hover:border-primary/20', 'hover:-translate-y-0.5');
+                            card.classList.remove('bg-secondary/5', 'border-secondary/25');
+                        }
+                        // Strikethrough title
+                        const titleEl = card.querySelector('h4');
+                        if (titleEl) {
+                            titleEl.classList.toggle('line-through', isNowDone);
+                            titleEl.classList.toggle('opacity-50', isNowDone);
+                        }
+
+                        // Update level mini progress bar
+                        if (levelId) {
+                            const lvlBar = document.querySelector(`.level-res-bar-${levelId}`);
+                            const lvlText = document.querySelector(`.level-res-text-${levelId}`);
+                            const lvlTitle = document.querySelector(`.level-title-${levelId}`);
+                            const lvlBadge = document.querySelector(`.level-badge-${levelId}`);
+                            const lvlNode = document.querySelector(`[data-level-id="${levelId}"] .w-12`);
+
+                            if (lvlBar) lvlBar.style.width = (data.completedResources / data.totalResources * 100).toFixed(0) + '%';
+                            if (lvlText) lvlText.textContent = data.completedResources + '/' + data.totalResources;
+
+                            if (data.levelAutoCompleted) {
+                                if (lvlTitle) { lvlTitle.classList.add('line-through', 'opacity-50'); }
+                                if (lvlBadge) lvlBadge.classList.remove('hidden');
+                                if (lvlNode) {
+                                    lvlNode.className = 'w-12 h-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-300 shadow-sm bg-secondary border-secondary text-white shadow-lg shadow-secondary/25';
+                                    lvlNode.innerHTML = '<span class="material-symbols-outlined text-xl" style="font-variation-settings:\'FILL\' 1;">check_circle</span>';
                                 }
-                                const levelDiv = button.closest('[data-level-id]');
-                                const titleEl = levelDiv?.querySelector('h3');
-                                const badgeEl = levelDiv?.querySelector('.bg-secondary\\/10');
-                                if (titleEl) {
-                                    titleEl.classList.toggle('line-through', data.isCompleted);
-                                    titleEl.classList.toggle('opacity-50', data.isCompleted);
-                                    if (data.isCompleted && !badgeEl) {
-                                        const b = document.createElement('span');
-                                        b.className = 'px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-secondary/10 text-secondary';
-                                        b.textContent = 'Done';
-                                        titleEl.parentElement.appendChild(b);
-                                    } else if (!data.isCompleted && badgeEl) {
-                                        badgeEl.remove();
-                                    }
-                                }
-                                if (data.percentage !== undefined) {
-                                    const bar = document.getElementById('progressBar');
-                                    const text = document.getElementById('progressText');
-                                    const badge = document.getElementById('progressBadge');
-                                    if (bar) bar.style.width = data.percentage + '%';
-                                    if (text) text.textContent = data.percentage + '%';
-                                    if (badge) badge.textContent = data.completedCount + ' / ' + data.totalLevels;
+                            } else {
+                                if (lvlTitle) { lvlTitle.classList.remove('line-through', 'opacity-50'); }
+                                if (lvlBadge) lvlBadge.classList.add('hidden');
+                                if (lvlNode) {
+                                    const idx = parseInt(lvlNode.closest('[data-level-id]')?.dataset?.levelOrder || '0');
+                                    lvlNode.className = 'w-12 h-12 rounded-2xl border-2 flex items-center justify-center transition-all duration-300 shadow-sm bg-white border-outline-variant/30 text-on-surface/40';
                                 }
                             }
-                        } catch (err) {
-                            console.error('Toggle failed:', err);
-                        } finally {
-                            button.classList.remove('animate-pulse');
                         }
-                    });
+
+                        // Update sticky overall progress bar
+                        const overallPct = Math.round((data.levelPercentage + data.resourcePercentage) / 2);
+                        const overallBar = document.getElementById('overallBar');
+                        const overallText = document.getElementById('overallText');
+                        const levelPctText = document.getElementById('levelPctText');
+                        const resPctText = document.getElementById('resPctText');
+                        const levelCountText = document.getElementById('levelCountText');
+                        const resCountText = document.getElementById('resCountText');
+
+                        if (overallBar) overallBar.style.width = overallPct + '%';
+                        if (overallText) overallText.textContent = overallPct + '% Overall';
+                        if (levelPctText) levelPctText.textContent = data.levelPercentage + '%';
+                        if (resPctText) resPctText.textContent = data.resourcePercentage + '%';
+                        if (levelCountText) levelCountText.textContent = data.completedLevels;
+                        if (resCountText) resCountText.textContent = data.completedResources;
+
+                    } catch (err) {
+                        console.error('Toggle resource failed:', err);
+                    } finally {
+                        btn.classList.remove('animate-pulse', 'opacity-50');
+                    }
                 });
             });
+        });
         </script>
     }
 }

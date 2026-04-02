@@ -4,6 +4,7 @@ using GDGDashBoard.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GDG_DashBoard.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260402044139_UserResourceProgress")]
+    partial class UserResourceProgress
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -746,10 +749,11 @@ namespace GDG_DashBoard.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ResourceId");
+                    b.HasIndex("ResourceId")
+                        .HasFilter("[IsDeleted] = 0");
 
-                    b.HasIndex("UserId", "ResourceId")
-                        .IsUnique();
+                    b.HasIndex("UserId")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("UserResourceProgresses");
                 });
@@ -1136,13 +1140,13 @@ namespace GDG_DashBoard.DAL.Migrations
                     b.HasOne("GDG_DashBoard.DAL.Models.Resource", "Resource")
                         .WithMany()
                         .HasForeignKey("ResourceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("GDG_DashBoard.DAL.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Resource");

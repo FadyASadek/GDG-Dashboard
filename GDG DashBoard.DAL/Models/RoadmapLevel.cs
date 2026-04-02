@@ -11,4 +11,7 @@ public class RoadmapLevel : BaseEntity
     public Roadmap Roadmap { get; set; } = null!;
     public ICollection<Resource> Resources { get; set; } = new List<Resource>();
     public ICollection<UserNodeProgress> UserProgresses { get; set; } = new List<UserNodeProgress>();
+
+    public Guid? KnowledgeCheckQuizId { get; set; }
+    public Quiz? KnowledgeCheckQuiz { get; set; }
 }

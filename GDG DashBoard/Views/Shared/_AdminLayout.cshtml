@@ -115,6 +115,12 @@
                     <span class="material-symbols-outlined shrink-0 w-7 text-center text-2xl">school</span>
                     <span class="md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">Mentor Console</span>
                 </a>
+
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:text-gdg-blue hover:bg-surface-container-high transition-all shrink min-h-0 w-full @(ViewContext.RouteData.Values["controller"]?.ToString() == "Quiz" ? "sidebar-active" : "text-on-surface/70")"
+                   asp-controller="Quiz" asp-action="Index" title="Knowledge Checks">
+                    <span class="material-symbols-outlined shrink-0 w-7 text-center text-2xl">quiz</span>
+                    <span class="md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">Knowledge Checks</span>
+                </a>
             }
 
             @if (User.IsInRole("Admin") || User.IsInRole("Organizer") || User.IsInRole("Speaker"))
@@ -136,6 +142,12 @@
                asp-controller="Member" asp-action="MyRoadmaps" title="My Roadmaps">
                 <span class="material-symbols-outlined shrink-0 w-7 text-center text-2xl">menu_book</span>
                 <span class="md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">My Roadmaps</span>
+            </a>
+
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:text-gdg-blue hover:bg-surface-container-high transition-all shrink min-h-0 w-full @(ViewContext.RouteData.Values["controller"]?.ToString() == "Member" && ViewContext.RouteData.Values["action"]?.ToString() == "MyQuizAttempts" ? "sidebar-active" : "text-on-surface/70")"
+               asp-controller="Member" asp-action="MyQuizAttempts" title="My Quiz Attempts">
+                <span class="material-symbols-outlined shrink-0 w-7 text-center text-2xl">history</span>
+                <span class="md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap overflow-hidden">My Quiz Attempts</span>
             </a>
 
         </nav>

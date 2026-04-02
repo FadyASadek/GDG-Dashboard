@@ -1,0 +1,235 @@
+@model GDG_DashBoard.ViewModels.Quiz.CreateQuizViewModel
+@{
+    ViewData["Title"] = "Create Quiz";
+    Layout = "_AdminLayout";
+    ViewData["PageTitle"] = "Quiz Builder";
+}
+
+<div class="max-w-4xl mx-auto pb-20">
+    <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-outline-variant/20 mb-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <h2 class="text-2xl font-black font-headline text-on-surface mb-2 relative z-10">Quiz Details</h2>
+        <p class="text-sm text-on-surface/50 mb-8 relative z-10">Set up the general information for the knowledge check.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-on-surface mb-2">Quiz Title *</label>
+                <input type="text" id="quizTitle" class="w-full h-12 px-4 rounded-xl border-2 border-outline-variant/30 bg-surface-container-high focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-sm font-bold outline-none" required placeholder="e.g. Intermediate Python Concepts" />
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-on-surface mb-2">Description</label>
+                <textarea id="quizDesc" rows="3" class="w-full p-4 rounded-xl border-2 border-outline-variant/30 bg-surface-container-high focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-sm outline-none resize-none" placeholder="Provide context or instructions..."></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-on-surface mb-2">Passing Score (%) *</label>
+                <input type="number" id="quizPassingScore" min="1" max="100" value="50" class="w-full h-12 px-4 rounded-xl border-2 border-outline-variant/30 bg-surface-container-high focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 transition-all text-sm font-black text-secondary outline-none" required />
+            </div>
+        </div>
+    </div>
+
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-xl font-black font-headline text-on-surface">Questions</h2>
+            <p class="text-sm text-on-surface/50">Add questions and their possible choices.</p>
+        </div>
+        <button type="button" id="addQuestionBtn" class="px-4 py-2 bg-secondary/10 text-secondary rounded-xl text-sm font-bold hover:bg-secondary hover:text-white transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">add</span> Add Question
+        </button>
+    </div>
+
+    <!-- Questions Container -->
+    <div id="questionsContainer" class="space-y-6">
+        <!-- Questions injected here by JS -->
+    </div>
+
+    <!-- Empty State (hidden when questions exist) -->
+    <div id="emptyState" class="text-center py-12 bg-white/50 border border-dashed border-outline-variant/30 rounded-3xl mb-6">
+        <span class="material-symbols-outlined text-4xl text-on-surface/20 mb-3">quiz</span>
+        <h3 class="text-lg font-bold text-on-surface">No Questions Yet</h3>
+        <p class="text-sm text-on-surface/50 mt-1">Click the button above to add the first question.</p>
+    </div>
+
+    <div class="mt-8 flex justify-end">
+        <button type="button" id="saveQuizBtn" class="px-8 py-3.5 bg-primary text-white rounded-xl text-sm font-black tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">save</span> Save Quiz
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let questionIndex = 0;
+
+        const questionsContainer = document.getElementById('questionsContainer');
+        const emptyState = document.getElementById('emptyState');
+        const addQuestionBtn = document.getElementById('addQuestionBtn');
+        const saveQuizBtn = document.getElementById('saveQuizBtn');
+
+        // Template logic
+        function createQuestionElement(index) {
+            const div = document.createElement('div');
+            div.className = 'question-block bg-white rounded-3xl p-6 shadow-sm border border-outline-variant/20 relative animate-in fade-in slide-in-from-bottom-4 duration-300';
+            div.dataset.index = index;
+
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <h4 class="text-sm font-black text-primary uppercase tracking-wider">Question <span class="q-num">${index + 1}</span></h4>
+                    <button type="button" class="remove-q-btn w-8 h-8 flex items-center justify-center rounded-lg text-error/60 hover:bg-error/10 hover:text-error transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                </div>
+                
+                <textarea rows="2" class="q-content w-full p-4 mb-4 rounded-xl border-2 border-outline-variant/30 bg-surface-container-high focus:bg-white focus:border-primary transition-all text-sm font-bold outline-none resize-none" placeholder="What is the question?"></textarea>
+                
+                <div class="opts-container space-y-3 pl-2 md:pl-6 border-l-2 border-outline-variant/20"></div>
+                
+                <button type="button" class="add-opt-btn mt-4 ml-2 md:ml-6 px-3 py-1.5 bg-surface-container-highest text-on-surface/70 rounded-lg text-xs font-bold hover:bg-outline-variant/20 transition-colors flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">add</span> Add Option
+                </button>
+            `;
+
+            // Setup listeners
+            div.querySelector('.remove-q-btn').addEventListener('click', () => {
+                div.remove();
+                updateQuestionNumbers();
+            });
+
+            const optsContainer = div.querySelector('.opts-container');
+            const addOptBtn = div.querySelector('.add-opt-btn');
+
+            let optCount = 0;
+            const addOption = () => {
+                const optDiv = document.createElement('div');
+                optDiv.className = 'opt-block flex items-center gap-3 relative group';
+                
+                const uniqueId = `opt_${index}_${optCount++}`;
+                
+                optDiv.innerHTML = `
+                    <div class="relative flex items-center shrink-0">
+                        <input type="radio" name="correct_${index}" id="${uniqueId}" class="peer sr-only" required />
+                        <label for="${uniqueId}" class="w-6 h-6 rounded-full border-2 border-outline-variant/50 peer-checked:border-secondary peer-checked:bg-secondary flex items-center justify-center cursor-pointer transition-all shadow-sm">
+                            <span class="material-symbols-outlined text-white text-[14px] opacity-0 peer-checked:opacity-100 transition-opacity" style="font-variation-settings:'FILL' 1;">check</span>
+                        </label>
+                    </div>
+                    <input type="text" class="opt-text flex-1 h-10 px-4 rounded-xl border-2 border-transparent bg-surface-container-high focus:bg-white focus:border-outline-variant/50 transition-all text-sm outline-none" placeholder="Option text..." required />
+                    <button type="button" class="remove-opt-btn w-8 h-8 rounded-lg text-on-surface/30 hover:text-error hover:bg-error/10 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                `;
+
+                optDiv.querySelector('.remove-opt-btn').addEventListener('click', () => {
+                    optDiv.remove();
+                });
+
+                optsContainer.appendChild(optDiv);
+            };
+
+            // Add 2 default options
+            addOption();
+            addOption();
+
+            addOptBtn.addEventListener('click', addOption);
+
+            return div;
+        }
+
+        function updateQuestionNumbers() {
+            const blocks = document.querySelectorAll('.question-block');
+            if (blocks.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                blocks.forEach((block, idx) => {
+                    block.querySelector('.q-num').textContent = idx + 1;
+                    // Fix radio names so grouping works per question after deletions
+                    const radios = block.querySelectorAll('input[type="radio"]');
+                    radios.forEach(r => r.name = `correct_req_${idx}`);
+                });
+            }
+        }
+
+        addQuestionBtn.addEventListener('click', () => {
+            const newQ = createQuestionElement(questionIndex++);
+            questionsContainer.appendChild(newQ);
+            updateQuestionNumbers();
+        });
+
+        saveQuizBtn.addEventListener('click', async () => {
+            // Collect Data
+            const title = document.getElementById('quizTitle').value.trim();
+            const desc = document.getElementById('quizDesc').value.trim();
+            const passScore = parseInt(document.getElementById('quizPassingScore').value, 10);
+
+            if (!title) return alert("Quiz Title is required.");
+            if (passScore < 1 || passScore > 100) return alert("Valid passing score is required.");
+
+            const rawQs = document.querySelectorAll('.question-block');
+            if (rawQs.length === 0) return alert("Add at least one question.");
+
+            let questions = [];
+            let isValid = true;
+
+            rawQs.forEach((qBlock, qIdx) => {
+                const content = qBlock.querySelector('.q-content').value.trim();
+                const optBlocks = qBlock.querySelectorAll('.opt-block');
+                
+                if (!content) { alert(`Question ${qIdx + 1} content is empty.`); isValid = false; return; }
+                if (optBlocks.length < 2) { alert(`Question ${qIdx + 1} needs at least 2 options.`); isValid = false; return; }
+
+                let options = [];
+                let correctCount = 0;
+
+                optBlocks.forEach(oBlock => {
+                    const text = oBlock.querySelector('.opt-text').value.trim();
+                    const isCorrect = oBlock.querySelector('input[type="radio"]').checked;
+                    if (!text) { alert(`An option in Question ${qIdx + 1} is empty.`); isValid = false; return; }
+                    if (isCorrect) correctCount++;
+                    options.push({ text, isCorrect });
+                });
+
+                if (correctCount === 0) { alert(`Question ${qIdx + 1} must have a correct option selected.`); isValid = false; return; }
+
+                questions.push({
+                    content: content,
+                    orderIndex: qIdx,
+                    options: options
+                });
+            });
+
+            if (!isValid) return;
+
+            const payload = {
+                title,
+                description: desc,
+                passingScorePercentage: passScore,
+                questions
+            };
+
+            const btnOriginal = saveQuizBtn.innerHTML;
+            saveQuizBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Saving...';
+            saveQuizBtn.disabled = true;
+
+            try {
+                const res = await fetch('/Quiz/Create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    console.error(data);
+                    alert("Validation Error. Check console.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred while saving the quiz.");
+            } finally {
+                saveQuizBtn.innerHTML = btnOriginal;
+                saveQuizBtn.disabled = false;
+            }
+        });
+    </script>
+}

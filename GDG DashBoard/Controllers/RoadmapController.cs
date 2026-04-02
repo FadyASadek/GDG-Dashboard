@@ -14,12 +14,14 @@ public class RoadmapController : Controller
     private readonly AppDbContext _context;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IRoadmapService _roadmapService;
+    private readonly GDG_DashBoard.BLL.Services.QuizServices.IQuizService _quizService;
 
-    public RoadmapController(AppDbContext context, UserManager<ApplicationUser> userManager, IRoadmapService roadmapService)
+    public RoadmapController(AppDbContext context, UserManager<ApplicationUser> userManager, IRoadmapService roadmapService, GDG_DashBoard.BLL.Services.QuizServices.IQuizService quizService)
     {
         _context = context;
         _userManager = userManager;
         _roadmapService = roadmapService;
+        _quizService = quizService;
     }
 
     public async Task<IActionResult> Index()
@@ -70,13 +72,23 @@ public class RoadmapController : Controller
     {
         var roadmap = await _roadmapService.GetRoadmapDetailsAsync(id);
         if (roadmap == null) return NotFound();
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user != null)
+        {
+            if (await _userManager.IsInRoleAsync(user, "Admin") || await _userManager.IsInRoleAsync(user, "Organizer"))
+                ViewBag.AvailableQuizzes = await _quizService.GetAllQuizzesAsync();
+            else
+                ViewBag.AvailableQuizzes = await _quizService.GetQuizzesByCreatorAsync(user.Id);
+        }
+
         return View(roadmap);
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddLevel(Guid roadmapId, string title, string? instructions, int orderIndex)
+    public async Task<IActionResult> AddLevel(Guid roadmapId, string title, string? instructions, int orderIndex, Guid? quizId)
     {
-        await _roadmapService.AddLevelAsync(roadmapId, title, instructions, orderIndex);
+        await _roadmapService.AddLevelAsync(roadmapId, title, instructions, orderIndex, quizId);
         TempData["SuccessMessage"] = "Level added successfully!";
         return RedirectToAction(nameof(Details), new { id = roadmapId });
     }

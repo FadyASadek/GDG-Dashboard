@@ -11,6 +11,7 @@ using GDG_DashBoard.BLL.Services.Group;
 using GDG_DashBoard.BLL.Services.RoadmapServices;
 using GDG_DashBoard.BLL.Services.Member;
 using GDG_DashBoard.BLL.Services.Ai;
+using GDG_DashBoard.BLL.Services.QuizServices;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -60,6 +61,7 @@ builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IRoadmapService, RoadmapService>();
 builder.Services.AddScoped<IMemberService,MemberService>();
 builder.Services.AddScoped<ICvParserService, GeminiCvParserService>();
+builder.Services.AddScoped<IQuizService, QuizService>();
 
 var app = builder.Build();
 

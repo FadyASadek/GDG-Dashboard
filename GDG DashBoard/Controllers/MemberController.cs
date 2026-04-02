@@ -15,15 +15,18 @@ public class MemberController : Controller
     private readonly IMemberService _memberService;
     private readonly ICvParserService _cvParserService;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly GDG_DashBoard.BLL.Services.QuizServices.IQuizService _quizService;
 
     public MemberController(
         IMemberService memberService, 
         ICvParserService cvParserService, 
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        GDG_DashBoard.BLL.Services.QuizServices.IQuizService quizService)
     {
         _memberService = memberService;
         _cvParserService = cvParserService;
         _userManager = userManager;
+        _quizService = quizService;
     }
 
     /// <summary>
@@ -70,6 +73,10 @@ public class MemberController : Controller
         ViewBag.TotalLevels = result.TotalLevels;
         ViewBag.CompletedCount = result.CompletedCount;
         ViewBag.IsEnrolled = result.IsEnrolled;
+        ViewBag.CompletedResourceIds = result.CompletedResourceIds;
+        ViewBag.QuizAttemptStatus = result.QuizAttemptStatus;
+        ViewBag.TotalResources = result.TotalResources;
+        ViewBag.CompletedResources = result.CompletedResources;
 
         return View(result.Roadmap);
     }
@@ -135,9 +142,46 @@ public class MemberController : Controller
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    [HttpGet]
+    public async Task<IActionResult> MyQuizAttempts()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Challenge();
+
+        var attempts = await _quizService.GetUserQuizAttemptsAsync(user.Id);
+        return View(attempts);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ToggleResourceProgress([FromBody] ToggleResourceRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+
+        var result = await _memberService.ToggleResourceProgressAsync(user.Id, request.ResourceId);
+
+        return Json(new
+        {
+            success = result.Success,
+            isCompleted = result.IsCompleted,
+            levelAutoCompleted = result.LevelAutoCompleted,
+            levelPercentage = result.LevelPercentage,
+            resourcePercentage = result.ResourcePercentage,
+            completedResources = result.CompletedResources,
+            totalResources = result.TotalResources,
+            completedLevels = result.CompletedLevels,
+            totalLevels = result.TotalLevels
+        });
+    }
 }
 
 public class ToggleProgressRequest
 {
     public Guid LevelId { get; set; }
+}
+
+public class ToggleResourceRequest
+{
+    public Guid ResourceId { get; set; }
 }
