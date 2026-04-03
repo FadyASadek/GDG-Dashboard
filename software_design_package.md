@@ -196,13 +196,4 @@ Since this is an MVC Application, most data is formulated into Views. However, e
   * **Method:** GET
   * **Response:** PNG image stream of the QR Code.
 
-### 3.8 Constraints
 
-* **Technical Constraints:** Relies strictly on a Windows/Linux environment capable of hosting .NET 10 SDK runtimes and SQL Server.
-* **Business Constraints:** Requires manual instructor intervention to verify "PracticalTasks" if not fully automated through external CI/CD pipelines.
-
-### 3.9 Future Enhancements
-
-* **Gamification:** Implementation of XP, badges, and leaderboards mapping to the `UserNodeProgress` engine.
-* **Microservices Pivot:** Should traffic exponentially increase, separating the monolithic MVC app by hoisting the BLL into a discrete REST or gRPC API.
-* **Native Authentication:** Support for Google OAuth and GitHub login integration.
