@@ -141,8 +141,12 @@
                                         <span class="text-xs font-bold text-on-surface/40">Progress</span>
                                         <span class="text-xs font-black text-on-surface">@roadmap.ProgressPercentage%</span>
                                     </div>
-                                    <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+                                    <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden mb-4">
                                         <div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: @roadmap.ProgressPercentage%"></div>
+                                    </div>
+                                    <div class="border-t border-outline-variant/10 pt-3 mt-auto w-full flex justify-between items-center text-primary group-hover:text-gdg-blue transition-colors">
+                                        <span class="text-[10px] font-black uppercase tracking-wider">Active Track</span>
+                                        <span class="text-xs font-bold flex items-center gap-1">Continue <span class="material-symbols-outlined text-[14px]">arrow_forward</span></span>
                                     </div>
                                 </a>
                             }

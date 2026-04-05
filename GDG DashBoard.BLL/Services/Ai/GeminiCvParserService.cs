@@ -67,31 +67,42 @@ Strictly return ONLY a raw JSON object matching this exact schema. Do not includ
 Extracted CV Text:
 {extractedText}";
 
-        var response = await client.Models.GenerateContentAsync(
-            model: "gemini-3-flash-preview", 
-            contents: prompt
-        );
-
-        var rawParsedText = response.Candidates?[0]?.Content?.Parts?[0]?.Text;
-
-        if (string.IsNullOrWhiteSpace(rawParsedText)) 
-            throw new Exception("Gemini returned empty text.");
-
-        rawParsedText = rawParsedText.Trim();
-        if (rawParsedText.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            rawParsedText = rawParsedText.Substring(7);
-        }
-        else if (rawParsedText.StartsWith("```", StringComparison.OrdinalIgnoreCase))
-        {
-            rawParsedText = rawParsedText.Substring(3);
-        }
+            var response = await client.Models.GenerateContentAsync(
+                model: "gemini-3-flash-preview", 
+                contents: prompt
+            );
 
-        if (rawParsedText.EndsWith("```", StringComparison.OrdinalIgnoreCase))
-        {
-            rawParsedText = rawParsedText.Substring(0, rawParsedText.Length - 3);
-        }
+            var rawParsedText = response.Candidates?[0]?.Content?.Parts?[0]?.Text;
 
-        return rawParsedText.Trim();
+            if (string.IsNullOrWhiteSpace(rawParsedText)) 
+                throw new Exception("Gemini returned empty text.");
+
+            rawParsedText = rawParsedText.Trim();
+            if (rawParsedText.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
+            {
+                rawParsedText = rawParsedText.Substring(7);
+            }
+            else if (rawParsedText.StartsWith("```", StringComparison.OrdinalIgnoreCase))
+            {
+                rawParsedText = rawParsedText.Substring(3);
+            }
+
+            if (rawParsedText.EndsWith("```", StringComparison.OrdinalIgnoreCase))
+            {
+                rawParsedText = rawParsedText.Substring(0, rawParsedText.Length - 3);
+            }
+
+            return rawParsedText.Trim();
+        }
+        catch (Exception ex)
+        {
+            if (ex.Message.Contains("503") || ex.Message.Contains("quota") || ex.Message.Contains("429") || ex.Message.Contains("demand"))
+            {
+                throw new Exception("Google AI is currently experiencing high traffic. Please try again in 30 seconds.");
+            }
+            throw;
+        }
     }
 }

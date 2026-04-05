@@ -1,0 +1,61 @@
+@model List<GDG_DashBoard.DAL.Models.QuizViolation>
+@{
+    ViewData["Title"] = "Group Violations";
+    Layout = "_AdminLayout";
+    var users = ViewBag.Users as Dictionary<Guid, string> ?? new Dictionary<Guid, string>();
+    var group = ViewBag.Group as GDG_DashBoard.DAL.Models.CommunityGroup;
+}
+
+<div class="px-6 py-8 md:px-8 space-y-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-black font-headline text-on-surface mb-2">Quiz Violations Log</h1>
+            <p class="text-on-surface/60 font-medium">Monitoring activity for cohort: <span class="font-bold text-primary">@group?.Name</span></p>
+        </div>
+        <a asp-action="Manage" asp-route-id="@group?.Id" class="px-5 py-2.5 bg-surface-container rounded-xl text-sm font-bold text-on-surface hover:bg-outline-variant/20 transition-all inline-flex items-center gap-2 border border-outline-variant/30">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Back to Group
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-outline-variant/20">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b-2 border-outline-variant/20">
+                            <th class="py-4 px-4 text-sm font-black text-on-surface/60 uppercase tracking-wider">Member Email</th>
+                            <th class="py-4 px-4 text-sm font-black text-on-surface/60 uppercase tracking-wider">Quiz ID</th>
+                            <th class="py-4 px-4 text-sm font-black text-on-surface/60 uppercase tracking-wider">Violation Type</th>
+                            <th class="py-4 px-4 text-sm font-black text-on-surface/60 uppercase tracking-wider">Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/10">
+                        @foreach (var v in Model)
+                        {
+                            var email = users.ContainsKey(v.UserId) ? users[v.UserId] : "Unknown User";
+                            <tr class="hover:bg-surface-container/50 transition-colors">
+                                <td class="py-4 px-4 font-bold text-on-surface">@email</td>
+                                <td class="py-4 px-4 text-sm font-medium text-on-surface/70 truncate max-w-[150px]" title="@v.QuizId">@v.QuizId</td>
+                                <td class="py-4 px-4">
+                                    <span class="px-3 py-1 bg-error/10 text-error rounded-lg text-sm font-bold">@v.ViolationType</span>
+                                </td>
+                                <td class="py-4 px-4 text-sm font-medium text-on-surface/60">@v.CreatedAt.ToLocalTime().ToString("g")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bg-white rounded-3xl p-12 text-center border border-outline-variant/20">
+            <div class="w-16 h-16 rounded-2xl bg-success/10 text-success flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-3xl">verified_user</span>
+            </div>
+            <h3 class="text-xl font-black text-on-surface mb-2">No Violations Found</h3>
+            <p class="text-on-surface/60 max-w-sm mx-auto">It looks like the students in this cohort are behaving well during quizzes! No violations have been logged.</p>
+        </div>
+    }
+</div>

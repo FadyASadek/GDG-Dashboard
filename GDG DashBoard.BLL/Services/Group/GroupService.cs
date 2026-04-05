@@ -81,6 +81,7 @@ public class GroupService : IGroupService
             .ToListAsync();
 
         var newMemberIds = memberIds.Except(existingMembers).ToList();
+        if (!newMemberIds.Any()) return;
 
         var newMembers = newMemberIds.Select(id => new GroupMember
         {
@@ -90,6 +91,8 @@ public class GroupService : IGroupService
 
         _context.GroupMembers.AddRange(newMembers);
         await _context.SaveChangesAsync();
+
+        // Auto-enrollment removed. Users must manually opt-in.
     }
 
     public async Task AssignRoadmapToGroupAsync(Guid groupId, Guid roadmapId)
@@ -101,51 +104,6 @@ public class GroupService : IGroupService
         if (group == null) throw new Exception("Group not found");
 
         group.RoadmapId = roadmapId;
-
-        var memberIds = group.GroupMembers.Select(gm => gm.MemberId).ToList();
-
-        var roadmap = await _context.Roadmaps
-            .Include(r => r.Levels)
-            .FirstOrDefaultAsync(r => r.Id == roadmapId);
-
-        if (roadmap == null) throw new Exception("Roadmap not found");
-
-        var existingEnrollments = await _context.UserEnrollments
-            .Where(e => e.RoadmapId == roadmapId && memberIds.Contains(e.UserId))
-            .ToListAsync();
-
-        var existingEnrolledUserIds = existingEnrollments.Select(e => e.UserId).ToHashSet();
-        
-        var newEnrollments = new List<UserEnrollment>();
-        var newProgresses = new List<UserNodeProgress>();
-
-        foreach (var memberId in memberIds)
-        {
-            if (!existingEnrolledUserIds.Contains(memberId))
-            {
-                newEnrollments.Add(new UserEnrollment
-                {
-                    UserId = memberId,
-                    RoadmapId = roadmapId,
-                    Status = EnrollmentStatus.InProgress,
-                    ProgressPercentage = 0
-                });
-
-                foreach (var level in roadmap.Levels)
-                {
-                    newProgresses.Add(new UserNodeProgress
-                    {
-                        UserId = memberId,
-                        RoadmapLevelId = level.Id,
-                        IsCompleted = false
-                    });
-                }
-            }
-        }
-
-        if (newEnrollments.Any()) _context.UserEnrollments.AddRange(newEnrollments);
-        if (newProgresses.Any()) _context.UserNodeProgresses.AddRange(newProgresses);
-
         await _context.SaveChangesAsync();
     }
 
@@ -165,34 +123,6 @@ public class GroupService : IGroupService
             GroupId = group.Id,
             MemberId = userId
         });
-
-        if (group.RoadmapId.HasValue)
-        {
-            var isEnrolled = await _context.UserEnrollments
-                .AnyAsync(e => e.UserId == userId && e.RoadmapId == group.RoadmapId.Value);
-
-            if (!isEnrolled)
-            {
-                var roadmap = await _context.Roadmaps.Include(r => r.Levels).FirstAsync(r => r.Id == group.RoadmapId.Value);
-                _context.UserEnrollments.Add(new UserEnrollment
-                {
-                    UserId = userId,
-                    RoadmapId = roadmap.Id,
-                    Status = GDG_DashBoard.DAL.Eums.EnrollmentStatus.InProgress,
-                    ProgressPercentage = 0
-                });
-
-                foreach(var level in roadmap.Levels)
-                {
-                    _context.UserNodeProgresses.Add(new UserNodeProgress
-                    {
-                        UserId = userId,
-                        RoadmapLevelId = level.Id,
-                        IsCompleted = false
-                    });
-                }
-            }
-        }
 
         await _context.SaveChangesAsync();
         return true;

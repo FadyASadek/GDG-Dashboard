@@ -42,7 +42,7 @@
     }
     else
     {
-        <form asp-action="SubmitQuiz" method="post" class="space-y-8">
+        <form asp-action="SubmitQuiz" method="post" id="quizForm" class="space-y-8">
             <input type="hidden" name="id" value="@Model.Id" />
             <input type="hidden" name="roadmapId" value="@ViewBag.RoadmapId" />
             <input type="hidden" name="levelId" value="@ViewBag.LevelId" />
@@ -91,3 +91,55 @@
         </form>
     }
 </div>
+
+@section Scripts {
+    @if (!alreadyPassed)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                let warningCount = 0;
+                const maxWarnings = 3;
+                const quizId = '@Model.Id';
+
+                const form = document.getElementById('quizForm');
+                if(!form) return;
+
+                async function logViolation(type) {
+                    try {
+                        await fetch('/Quiz/LogViolation', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ quizId: quizId, violationType: type })
+                        });
+                    } catch (e) {
+                        console.error("Failed to log violation", e);
+                    }
+
+                    warningCount++;
+                    
+                    if (warningCount >= maxWarnings) {
+                        alert('Warning ' + warningCount + '/' + maxWarnings + ': Maximum violations reached. The quiz is automatically submitting.');
+                        form.submit();
+                    } else {
+                        alert('Warning ' + warningCount + '/' + maxWarnings + ': Leaving the page or copying is not allowed. The quiz will auto-submit after 3 warnings.');
+                    }
+                }
+
+                document.addEventListener('visibilitychange', function() {
+                    if (document.hidden) {
+                        logViolation("Tab Switch");
+                    }
+                });
+
+                ['copy', 'cut', 'paste', 'contextmenu'].forEach(evt => {
+                    document.addEventListener(evt, function(e) {
+                        e.preventDefault();
+                        logViolation(evt.charAt(0).toUpperCase() + evt.slice(1));
+                    });
+                });
+            });
+        </script>
+    }
+}

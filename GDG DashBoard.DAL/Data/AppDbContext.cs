@@ -27,6 +27,8 @@ namespace GDGDashBoard.DAL.Data
         public DbSet<QuizOption> QuizOptions => Set<QuizOption>();
         public DbSet<UserQuizAttempt> UserQuizAttempts => Set<UserQuizAttempt>();
         public DbSet<UserResourceProgress> UserResourceProgresses => Set<UserResourceProgress>();
+        public DbSet<QuizViolation> QuizViolations => Set<QuizViolation>();
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); 
@@ -180,6 +182,7 @@ namespace GDGDashBoard.DAL.Data
             builder.Entity<QuizOption>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
             builder.Entity<UserQuizAttempt>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
             builder.Entity<UserResourceProgress>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
+            builder.Entity<QuizViolation>().Property(e => e.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
 
             // 4. Performance Filtered Indexes (Skip Soft-Deleted rows)
             builder.Entity<UserEnrollment>().HasIndex(x => x.UserId).HasFilter("[IsDeleted] = 0");

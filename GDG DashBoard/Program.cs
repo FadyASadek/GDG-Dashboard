@@ -59,7 +59,9 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IRoadmapService, RoadmapService>();
-builder.Services.AddScoped<IMemberService,MemberService>();
+builder.Services.AddScoped<IMemberProfileService, MemberProfileService>();
+builder.Services.AddScoped<IMemberDashboardService, MemberDashboardService>();
+builder.Services.AddScoped<ILearningProgressService, LearningProgressService>();
 builder.Services.AddScoped<ICvParserService, GeminiCvParserService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
 

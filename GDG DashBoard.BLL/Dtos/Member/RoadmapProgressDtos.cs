@@ -23,6 +23,7 @@ public class ToggleResourceResultDto
     public int TotalResources { get; set; }
     public int CompletedLevels { get; set; }
     public int TotalLevels { get; set; }
+    public string? ErrorMessage { get; set; }
 }
 
 public class RoadmapDetailsForMemberDto

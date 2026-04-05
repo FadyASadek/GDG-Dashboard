@@ -199,8 +199,8 @@ public class QuizController : Controller
 
         if (attempt.IsPassed)
         {
-            var memberSvc = HttpContext.RequestServices.GetService(typeof(GDG_DashBoard.BLL.Services.Member.IMemberService))
-                            as GDG_DashBoard.BLL.Services.Member.IMemberService;
+            var memberSvc = HttpContext.RequestServices.GetService(typeof(GDG_DashBoard.BLL.Services.Member.ILearningProgressService))
+                            as GDG_DashBoard.BLL.Services.Member.ILearningProgressService;
             if (memberSvc != null)
             {
                 // Always sync quiz resource progress (handles resource-type quizzes + enrollment %)
@@ -226,4 +226,25 @@ public class QuizController : Controller
             return RedirectToAction("Index", "Home");
         }
     }
+
+    [HttpPost("LogViolation")]
+    public async Task<IActionResult> LogViolation([FromBody] ViolationDto dto)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Unauthorized();
+
+        var learningSvc = HttpContext.RequestServices.GetService(typeof(GDG_DashBoard.BLL.Services.Member.ILearningProgressService)) as GDG_DashBoard.BLL.Services.Member.ILearningProgressService;
+        if (learningSvc != null)
+        {
+            await learningSvc.LogQuizViolationAsync(user.Id, dto.QuizId, dto.ViolationType);
+        }
+        
+        return Ok(new { success = true });
+    }
+}
+
+public class ViolationDto
+{
+    public Guid QuizId { get; set; }
+    public required string ViolationType { get; set; }
 }

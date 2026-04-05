@@ -3,6 +3,7 @@ using GDG_DashBoard.DAL.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GDG_DashBoard.Controllers;
 
@@ -70,6 +71,18 @@ public class GroupController : Controller
         if (!isMember && !isManager)
             return Forbid();
 
+        bool isEnrolled = false;
+        if (group.RoadmapId.HasValue)
+        {
+            var memberSvc = HttpContext.RequestServices.GetService(typeof(GDG_DashBoard.BLL.Services.Member.IMemberDashboardService)) as GDG_DashBoard.BLL.Services.Member.IMemberDashboardService;
+            if (memberSvc != null)
+            {
+                var dashboard = await memberSvc.GetMemberDashboardAsync(user.Id);
+                isEnrolled = dashboard?.ActiveRoadmaps.Any(r => r.RoadmapId == group.RoadmapId.Value) ?? false;
+            }
+        }
+        ViewBag.IsEnrolled = isEnrolled;
+
         return View(group);
     }
 
@@ -130,5 +143,40 @@ public class GroupController : Controller
             TempData["ErrorMessage"] = ex.Message;
             return RedirectToAction("Join", new { code });
         }
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Admin,Organizer,Mentor")]
+    public async Task<IActionResult> GroupViolations(Guid id)
+    {
+        var group = await _groupService.GetGroupDetailsAsync(id);
+        if (group == null) return NotFound();
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Challenge();
+
+        var isManager = await _userManager.IsInRoleAsync(user, "Admin") 
+                     || await _userManager.IsInRoleAsync(user, "Organizer") 
+                     || await _userManager.IsInRoleAsync(user, "Mentor");
+        if (!isManager) return Forbid();
+
+        var userIds = group.GroupMembers.Select(gm => gm.MemberId).ToList();
+
+        var quizViolationRepo = HttpContext.RequestServices.GetService(typeof(GDG_DashBoard.DAL.Repositores.GenericRepository.IGenericRepositoryAsync<GDG_DashBoard.DAL.Models.QuizViolation>)) as GDG_DashBoard.DAL.Repositores.GenericRepository.IGenericRepositoryAsync<GDG_DashBoard.DAL.Models.QuizViolation>;
+
+        var violations = new List<GDG_DashBoard.DAL.Models.QuizViolation>();
+        if (quizViolationRepo != null && userIds.Any())
+        {
+            violations = await quizViolationRepo.GetTableNoTracking()
+                .Where(v => userIds.Contains(v.UserId))
+                .OrderByDescending(v => v.CreatedAt)
+                .ToListAsync();
+        }
+
+        var users = await _userManager.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+        ViewBag.Users = users.ToDictionary(u => u.Id, u => u.Email);
+        ViewBag.Group = group;
+
+        return View(violations);
     }
 }

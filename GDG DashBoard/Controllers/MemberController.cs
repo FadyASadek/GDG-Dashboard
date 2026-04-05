@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using GDG_DashBoard.BLL.Services.Member;
 using GDG_DashBoard.BLL.Services.Ai;
@@ -12,18 +13,24 @@ namespace GDG_DashBoard.Controllers;
 [Authorize]
 public class MemberController : Controller
 {
-    private readonly IMemberService _memberService;
+    private readonly IMemberProfileService _profileService;
+    private readonly IMemberDashboardService _dashboardService;
+    private readonly ILearningProgressService _learningService;
     private readonly ICvParserService _cvParserService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly GDG_DashBoard.BLL.Services.QuizServices.IQuizService _quizService;
 
     public MemberController(
-        IMemberService memberService, 
+        IMemberProfileService profileService,
+        IMemberDashboardService dashboardService,
+        ILearningProgressService learningService,
         ICvParserService cvParserService, 
         UserManager<ApplicationUser> userManager,
         GDG_DashBoard.BLL.Services.QuizServices.IQuizService quizService)
     {
-        _memberService = memberService;
+        _profileService = profileService;
+        _dashboardService = dashboardService;
+        _learningService = learningService;
         _cvParserService = cvParserService;
         _userManager = userManager;
         _quizService = quizService;
@@ -38,8 +45,8 @@ public class MemberController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Challenge();
         
-        var vm = await _memberService.GetProfileForEditAsync(user.Id);
-        var dashboard = await _memberService.GetMemberDashboardAsync(user.Id);
+        var vm = await _profileService.GetProfileForEditAsync(user.Id);
+        var dashboard = await _dashboardService.GetMemberDashboardAsync(user.Id);
         ViewBag.Dashboard = dashboard;
         return View(vm);
     }
@@ -50,7 +57,7 @@ public class MemberController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Challenge();
 
-        var dashboard = await _memberService.GetMemberDashboardAsync(user.Id);
+        var dashboard = await _dashboardService.GetMemberDashboardAsync(user.Id);
         if (dashboard == null) return NotFound();
 
         return View(dashboard);
@@ -58,7 +65,7 @@ public class MemberController : Controller
 
     /// <summary>
     /// Interactive Roadmap Progression View with level-by-level stepper.
-    /// All data fetching and progress aggregation handled by IMemberService.
+    /// Data fetching handled by ILearningProgressService.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> RoadmapDetails(Guid id)
@@ -66,7 +73,7 @@ public class MemberController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Challenge();
 
-        var result = await _memberService.GetRoadmapDetailsForMemberAsync(id, user.Id);
+        var result = await _learningService.GetRoadmapDetailsForMemberAsync(id, user.Id);
         if (result == null) return NotFound();
 
         ViewBag.CompletedLevelIds = result.CompletedLevelIds;
@@ -78,12 +85,24 @@ public class MemberController : Controller
         ViewBag.TotalResources = result.TotalResources;
         ViewBag.CompletedResources = result.CompletedResources;
 
+        bool isEligibleToEnroll = false;
+        if (!result.IsEnrolled)
+        {
+            var groupMemberRepo = HttpContext.RequestServices.GetService(typeof(GDG_DashBoard.DAL.Repositores.GenericRepository.IGenericRepositoryAsync<GDG_DashBoard.DAL.Models.GroupMember>)) as GDG_DashBoard.DAL.Repositores.GenericRepository.IGenericRepositoryAsync<GDG_DashBoard.DAL.Models.GroupMember>;
+            if (groupMemberRepo != null)
+            {
+                isEligibleToEnroll = await groupMemberRepo.GetTableNoTracking()
+                    .Include(gm => gm.Group)
+                    .AnyAsync(gm => gm.MemberId == user.Id && gm.Group.RoadmapId == id);
+            }
+        }
+        ViewBag.IsEligibleToEnroll = isEligibleToEnroll;
+
         return View(result.Roadmap);
     }
 
     /// <summary>
     /// AJAX endpoint: Toggle a level's completion status.
-    /// All state mutation and progress recalculation handled by IMemberService.
     /// </summary>
     [HttpPost]
     public async Task<IActionResult> ToggleNodeProgress([FromBody] ToggleProgressRequest request)
@@ -91,7 +110,7 @@ public class MemberController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Unauthorized();
 
-        var result = await _memberService.ToggleNodeProgressAsync(user.Id, request.LevelId);
+        var result = await _learningService.ToggleNodeProgressAsync(user.Id, request.LevelId);
 
         return Json(new
         {
@@ -109,7 +128,7 @@ public class MemberController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Challenge();
         
-        var vm = await _memberService.GetProfileForEditAsync(user.Id);
+        var vm = await _profileService.GetProfileForEditAsync(user.Id);
         return View(vm);
     }
 
@@ -121,7 +140,7 @@ public class MemberController : Controller
         
         if (ModelState.IsValid)
         {
-            await _memberService.UpdateMemberProfileAsync(user.Id, model);
+            await _profileService.UpdateMemberProfileAsync(user.Id, model);
             TempData["SuccessMessage"] = "Profile updated successfully!";
             return RedirectToAction("MyProfile");
         }
@@ -159,7 +178,7 @@ public class MemberController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Unauthorized();
 
-        var result = await _memberService.ToggleResourceProgressAsync(user.Id, request.ResourceId);
+        var result = await _learningService.ToggleResourceProgressAsync(user.Id, request.ResourceId);
 
         return Json(new
         {
@@ -173,6 +192,18 @@ public class MemberController : Controller
             completedLevels = result.CompletedLevels,
             totalLevels = result.TotalLevels
         });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EnrollInRoadmap(Guid id)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Challenge();
+
+        await _learningService.EnrollInRoadmapAsync(user.Id, id);
+
+        return RedirectToAction(nameof(RoadmapDetails), new { id });
     }
 }
 

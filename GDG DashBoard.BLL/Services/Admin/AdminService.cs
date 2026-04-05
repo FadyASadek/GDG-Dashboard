@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace GDG_DashBoard.BLL.Services.Admin;
 
@@ -23,6 +24,7 @@ public class AdminService : IAdminService
     private readonly IGenericRepositoryAsync<UserEnrollment> _enrollmentRepo;
     private readonly IGenericRepositoryAsync<UserNodeProgress> _progressRepo;
     private readonly IGenericRepositoryAsync<Roadmap> _roadmapRepo;
+    private readonly IConfiguration _configuration;
 
     public AdminService(
         UserManager<ApplicationUser> userManager,
@@ -33,7 +35,8 @@ public class AdminService : IAdminService
         IGenericRepositoryAsync<UserProfile> profileRepo,
         IGenericRepositoryAsync<UserEnrollment> enrollmentRepo,
         IGenericRepositoryAsync<UserNodeProgress> progressRepo,
-        IGenericRepositoryAsync<Roadmap> roadmapRepo)
+        IGenericRepositoryAsync<Roadmap> roadmapRepo,
+        IConfiguration configuration)
     {
         _userManager = userManager;
         _roleManager = roleManager;
@@ -44,6 +47,7 @@ public class AdminService : IAdminService
         _enrollmentRepo = enrollmentRepo;
         _progressRepo = progressRepo;
         _roadmapRepo = roadmapRepo;
+        _configuration = configuration;
     }
 
    
@@ -84,12 +88,17 @@ public class AdminService : IAdminService
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-        var resetLink = _linkGenerator.GetUriByAction(
-            _httpContextAccessor.HttpContext!,
+        var resetLinkPath = _linkGenerator.GetPathByAction(
             action: "SetPassword",
             controller: "Auth",
             values: new { email = dto.Email, token = token }
         );
+
+        var request = _httpContextAccessor.HttpContext!.Request;
+        var siteBaseUrl = _configuration["SiteBaseUrl"];
+        var host = !string.IsNullOrEmpty(siteBaseUrl) ? siteBaseUrl.TrimEnd('/') : $"{request.Scheme}://{request.Host}";
+
+        var resetLink = $"{host}{resetLinkPath}";
 
         var emailBody = $@"
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
